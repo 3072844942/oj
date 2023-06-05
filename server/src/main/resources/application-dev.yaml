@@ -1,0 +1,8 @@
+spring:
+    data:
+        mongodb:
+            uri: mongodb://admin:124609@localhost:27017/oj # mongo连接地址， 记得新建管理用户
+    security:
+      user:
+          name: root
+          password: root
