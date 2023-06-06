@@ -1,7 +1,6 @@
 package org.oj.server.util;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  * 加密工具
@@ -10,7 +9,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * @since 2023/6/2 下午5:37
  */
 public class EncryptionUtil {
-    private static final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     /**
      * 加密
@@ -19,7 +17,7 @@ public class EncryptionUtil {
      * @return 密文
      */
     public static String encode(String str) {
-        return passwordEncoder.encode(str);
+        return BCrypt.hashpw(str, BCrypt.gensalt());
     }
 
     /**
@@ -30,6 +28,6 @@ public class EncryptionUtil {
      * @return 是否匹配
      */
     public static boolean match(String str, String pass) {
-        return passwordEncoder.matches(str, pass);
+        return BCrypt.checkpw(str, pass);
     }
 }

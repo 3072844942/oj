@@ -1,28 +1,27 @@
 server:
-    port: 8080
+  port: 8080
 
 spring:
-    profiles:
-        active: dev
-    data:
-        mongodb:
-            auto-index-creation: true
+  profiles:
+    active: dev
+  data:
+    mongodb:
+      auto-index-creation: true
+  # 上传图片大小限制
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
 # springdoc-openapi项目配置
 springdoc:
-    swagger-ui:
-        path: /swagger-ui.html
-        tags-sorter: alpha
-        operations-sorter: alpha
-    api-docs:
-        path: /v3/api-docs
-    group-configs:
-        - group: 'default'
-          paths-to-match: '/**'
-          packages-to-scan: org.oj.server
-# knife4j的增强配置，不需要增强可以不配
-knife4j:
-    enable: true
-    setting:
-        enable-home-custom: true
-        home-custom-location: classpath:markdown/home.md
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: org.oj.server

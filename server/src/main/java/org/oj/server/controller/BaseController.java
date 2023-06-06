@@ -1,14 +1,16 @@
 package org.oj.server.controller;
 
+import lombok.extern.log4j.Log4j2;
 import org.oj.server.enums.StatusCodeEnum;
-import org.oj.server.exception.WarnException;
 import org.oj.server.exception.ErrorException;
+import org.oj.server.exception.WarnException;
 import org.oj.server.vo.PageVO;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -21,21 +23,21 @@ import java.util.Map;
  * @author march
  * @since 2023/5/31 上午10:45
  */
+@Log4j2
+@RestControllerAdvice
 public abstract class BaseController {
+
     @ExceptionHandler(WarnException.class)
-    @ResponseBody
     public final Object webExchangeBindException(WarnException ex) {
         return warn(ex.getCode(), ex.getMessage());
     }
 
     @ExceptionHandler(ErrorException.class)
-    @ResponseBody
     public final Object webExchangeErrorException(ErrorException ex) {
         return error(ex.getCode(), ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseBody
     protected final Object exception(Exception ex) {
         return error("程序内部错误: " + ex.getMessage());
     }

@@ -1,8 +1,36 @@
 spring:
-    data:
-        mongodb:
-            uri: mongodb://admin:124609@localhost:27017/oj # mongo连接地址， 记得新建管理用户
-    security:
-      user:
-          name: root
-          password: root
+  data:
+    mongodb:
+      uri: mongodb://admin:124609@localhost:27017/oj # mongo连接地址， 记得新建管理用户
+    redis:
+      host: localhost
+      port: 6379
+      password: 124609
+  security:
+    user:
+      name: root
+      password: root
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: 124609
+    listener:
+      simple:
+        retry:
+          max-attempts: 3 #最大重试次数
+          initial-interval: 3000 #重试间隔时间（单位毫秒）
+          enabled: true
+  # 邮箱 配置
+  mail:
+    host: smtp.163.com
+    username: a3072844942@163.com
+    password: CWAPALEBNHYXSORI
+    default-encoding: UTF-8
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory

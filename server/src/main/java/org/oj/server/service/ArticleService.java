@@ -62,7 +62,7 @@ public class ArticleService {
         }
         // id为空
         if (StringUtils.isEmpty(articleDTO.getId())) {
-            throw new WarnException(StatusCodeEnum.VALID_ERROR);
+            throw new WarnException(StatusCodeEnum.FAILED_PRECONDITION);
         }
         // 数据不存在
         if (!articleRepository.existsById(articleDTO.getId())) {
@@ -77,7 +77,7 @@ public class ArticleService {
     public ArticleHomeVO deleteOne(ArticleDTO articleDTO) {
         // id为空
         if (StringUtils.isEmpty(articleDTO.getId())) {
-            throw new ErrorException(StatusCodeEnum.VALID_ERROR);
+            throw new ErrorException(StatusCodeEnum.FAILED_PRECONDITION);
         }
 
         Optional<Article> byId = articleRepository.findById(articleDTO.getId());

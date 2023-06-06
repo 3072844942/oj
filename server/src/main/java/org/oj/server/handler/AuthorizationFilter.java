@@ -32,7 +32,7 @@ public class AuthorizationFilter {
     @Autowired
     private RoleRepository roleRepository;
 
-    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain, Permission permission) throws ServletException, IOException {
+    public boolean doFilterInternal(HttpServletRequest request, HttpServletResponse response, Permission permission) throws ServletException, IOException {
         UserAuth userAuth = Request.user.get();
         List<String> roleIds = userAuth.getRoleIds();
 
@@ -52,9 +52,9 @@ public class AuthorizationFilter {
 
         if (!flag.get()) {
             // 无操作权限
-            throw new ErrorException(StatusCodeEnum.AUTHORIZED);
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
         // 放行
-        filterChain.doFilter(request, response);
+        return true;
     }
 }

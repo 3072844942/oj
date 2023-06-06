@@ -75,13 +75,8 @@ public class UserAuth {
     private Long createTime;
 
     /**
-     * 修改时间
-     */
-    @LastModifiedDate
-    private Long updateTime;
-
-    /**
      * 最近登录时间
      */
+    @LastModifiedDate
     private Long lastLoginTime;
 }

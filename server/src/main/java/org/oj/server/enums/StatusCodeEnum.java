@@ -12,42 +12,15 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum StatusCodeEnum {
-    /**
-     * 成功
-     */
-    SUCCESS(20000, "操作成功"),
-    /**
-     * 没有操作权限
-     */
-    AUTHORIZED(40300, "没有操作权限"),
-    /**
-     * 系统异常
-     */
-    SYSTEM_ERROR(50000, "系统异常"),
-    /**
-     * 失败
-     */
-    FAIL(51000, "操作失败"),
-    /**
-     * 参数校验失败
-     */
-    VALID_ERROR(52000, "参数格式不正确"),
-    /**
-     * 用户名已存在
-     */
-    DATA_EXIST(52001, "数据已存在"),
-    /**
-     * 用户名不存在
-     */
-    DATA_NOT_EXIST(52002, "数据不存在"),
-    /**
-     * qq登录错误
-     */
-    QQ_LOGIN_ERROR(53001, "qq登录错误"),
-    /**
-     * 微博登录错误
-     */
-    WEIBO_LOGIN_ERROR(53002, "微博登录错误");
+    SUCCESS(0, "操作成功"),
+    UNAUTHORIZED(1, "没有操作权限"),
+    SYSTEM_ERROR(2, "系统异常"),
+    FAIL(3, "操作失败"),
+    FAILED_PRECONDITION(4, "参数格式不正确"),
+    DATA_EXIST(5, "数据已存在"),
+    DATA_NOT_EXIST(6, "数据不存在"),
+    LOGIN_ERROR(7, "登陆错误"),
+    PASSWORD_NOT_MATCHED(8, " 密码错误");
 
     /**
      * 状态码
