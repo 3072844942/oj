@@ -1,5 +1,6 @@
 package org.oj.server.service;
 
+import org.oj.server.constant.RedisPrefixConst;
 import org.oj.server.dao.UserAuthRepository;
 import org.oj.server.dao.UserInfoRepository;
 import org.oj.server.dto.UsernamePassword;
@@ -72,28 +73,28 @@ public class UserAuthService {
 
         // 五分钟过期
         String code = StringUtils.getRandomCode(6);
-        redisService.set(username, code, 5 * 60);
+        redisService.set(RedisPrefixConst.TOKEN + username, code, 5 * 60);
         mqService.email(username, code, 5L);
     }
 
     public String register(UsernamePassword usernamePassword) {
         String username = usernamePassword.getUsername();
-//        boolean checked = StringUtils.checkEmail(username);
-//        // 非邮箱
-//        if (!checked) {
-//            throw new ErrorException(StatusCodeEnum.FAILED_PRECONDITION);
-//        }
-//
-//        String code = (String) redisService.get(username);
-//        // 验证码错误
-//        if (code == null || !code.equals(usernamePassword.getCode())) {
-//            throw new ErrorException(StatusCodeEnum.FAILED_PRECONDITION);
-//        }
-//
-//        // 用户已存在
-//        if (userAuthRepository.existsByUsername(username).equals(true)) {
-//            throw new ErrorException(StatusCodeEnum.DATA_EXIST);
-//        }
+        boolean checked = StringUtils.checkEmail(username);
+        // 非邮箱
+        if (!checked) {
+            throw new ErrorException(StatusCodeEnum.FAILED_PRECONDITION);
+        }
+
+        String code = (String) redisService.get(RedisPrefixConst.TOKEN + username);
+        // 验证码错误
+        if (code == null || !code.equals(usernamePassword.getCode())) {
+            throw new ErrorException(StatusCodeEnum.FAILED_PRECONDITION);
+        }
+
+        // 用户已存在
+        if (userAuthRepository.existsByUsername(username).equals(true)) {
+            throw new ErrorException(StatusCodeEnum.DATA_EXIST);
+        }
 
         UserAuth userAuth = UserAuth.builder()
                 .username(username)
