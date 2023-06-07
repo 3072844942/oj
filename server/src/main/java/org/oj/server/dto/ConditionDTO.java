@@ -21,31 +21,38 @@ public class ConditionDTO {
     /**
      * 页码
      */
+    @Builder.Default
     @Schema(description = "页码")
     private Integer current = 1;
     /**
      * 条数
      */
+    @Builder.Default
     @Schema(description = "条数")
     private Integer size = 10;
     /**
      * 搜索内容
      */
+    @Builder.Default
     @Schema(description = "内容")
     private String keywords = "";
 
     /**
      * 标签要求
      */
+    @Builder.Default
     @Schema(description = "条数")
     private List<String> tags = new ArrayList<>();
 
+    @Builder.Default
     @Schema(description = "id")
     private String id = "";
 
+    @Builder.Default
     @Schema(description = "用户id")
     private String userId = "";
 
+    @Builder.Default
     @Schema(description = "id集合")
     private List<String> ids = new ArrayList<>();
 }

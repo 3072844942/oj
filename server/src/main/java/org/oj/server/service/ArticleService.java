@@ -1,5 +1,7 @@
 package org.oj.server.service;
 
+import jakarta.annotation.PostConstruct;
+import org.bson.types.ObjectId;
 import org.oj.server.dao.ArticleRepository;
 import org.oj.server.dto.ArticleDTO;
 import org.oj.server.dto.ConditionDTO;
@@ -18,6 +20,9 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,6 +36,8 @@ import java.util.Optional;
 public class ArticleService {
     @Autowired
     private ArticleRepository articleRepository;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     public ArticleDTO insertOne(ArticleDTO articleDTO) {
         WarnException checked = ArticleDTO.check(articleDTO);
@@ -164,15 +171,21 @@ public class ArticleService {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
         ArticleVO articleVO = ArticleVO.of(article);
+
+        ObjectId targetId = new ObjectId(article.getId());
         // 查询上一条， 下一条
         articleVO.setLast(
                 ArticlePaginationVO.of(
-                        articleRepository.findFirstByUpdateTimeBeforeOrderByUpdateTimeDesc(articleVO.getUpdateTime())
+                        mongoTemplate.findOne(new Query(Criteria.where("_id").lt(targetId))
+                                .limit(1)
+                                .with(Sort.by(Sort.Direction.DESC, "_id")), Article.class)
                 )
         );
         articleVO.setNext(
                 ArticlePaginationVO.of(
-                        articleRepository.findFirstByUpdateTimeAfterOrderByUpdateTime(articleVO.getUpdateTime())
+                        mongoTemplate.findOne(new Query(Criteria.where("_id").gt(targetId))
+                                .limit(1)
+                                .with(Sort.by(Sort.Direction.ASC, "_id")), Article.class)
                 )
         );
         // 查询最新文章

@@ -8,7 +8,4 @@ import org.springframework.data.mongodb.repository.MongoRepository;
  * @since 2023/5/31 上午11:20
  */
 public interface ArticleRepository extends MongoRepository<Article, String> {
-    Article findFirstByUpdateTimeAfterOrderByUpdateTime(Long updateTime);
-
-    Article findFirstByUpdateTimeBeforeOrderByUpdateTimeDesc(Long updateTime);
 }
