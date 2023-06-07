@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.oj.server.enums.EntityStateEnum;
-import org.oj.server.enums.EntityPermissionEnum;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -47,11 +46,6 @@ public class PhotoAlbum {
      * 是否删除
      */
     private EntityStateEnum state;
-
-    /**
-     * 权限
-     */
-    private EntityPermissionEnum permission;
 
     /**
      * 创建时间

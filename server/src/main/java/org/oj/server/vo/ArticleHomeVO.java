@@ -41,6 +41,10 @@ public class ArticleHomeVO {
      * 标题
      */
     private String title;
+    /**
+     * 摘要
+     */
+    private String summary;
 
     /**
      * 是否置顶

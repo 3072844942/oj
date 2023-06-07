@@ -1,37 +1,29 @@
-package org.oj.server.entity;
+package org.oj.server.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.oj.server.dto.ArticleDTO;
-import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.entity.Article;
 import org.oj.server.util.BeanCopyUtils;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
 /**
- * 文章
+ * 完整文章
  *
- * @author bin
- * @date 2021/07/29
- * @since 2020-05-18
+ * @author march
+ * @since 2023/6/6 下午3:56
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@Document("article")
-public class Article {
+@AllArgsConstructor
+public class ArticleVO {
 
     /**
      * id
      */
-    @Id
     private String id;
 
     /**
@@ -77,23 +69,36 @@ public class Article {
     /**
      * 文章状态
      */
-    private EntityStateEnum status;
+    private Integer status;
 
     /**
      * 创建时间
      */
-    @CreatedDate
     private Long createTime;
 
     /**
      * 修改时间
      */
-    @LastModifiedDate
     private Long updateTime;
 
-    public static Article of(ArticleDTO articleDTO) {
-        Article article = BeanCopyUtils.copyObject(articleDTO, Article.class);
-        article.setStatus(EntityStateEnum.valueOf(articleDTO.getState()));
-        return article;
+    /**
+     * 上一篇文章
+     */
+    private ArticlePaginationVO lastArticle;
+
+    /**
+     * 下一篇文章
+     */
+    private ArticlePaginationVO nextArticle;
+
+    /**
+     * 最新文章列表
+     */
+    private List<ArticleRecommendVO> newestArticleList;
+
+    public static ArticleVO of(Article article) {
+        ArticleVO articleVO = BeanCopyUtils.copyObject(article, ArticleVO.class);
+        articleVO.setStatus(article.getStatus().getCode());
+        return articleVO;
     }
 }

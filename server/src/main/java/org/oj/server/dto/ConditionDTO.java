@@ -43,14 +43,9 @@ public class ConditionDTO {
     @Schema(description = "id")
     private String id = "";
 
-    @Override
-    public String toString() {
-        return "ConditionDTO{" +
-                "current=" + current +
-                ", size=" + size +
-                ", keywords='" + keywords + '\'' +
-                ", tags=" + tags +
-                ", id='" + id + '\'' +
-                '}';
-    }
+    @Schema(description = "用户id")
+    private String userId = "";
+
+    @Schema(description = "id集合")
+    private List<String> ids = new ArrayList<>();
 }

@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.JudgeStateEnum;
-import org.oj.server.enums.EntityPermissionEnum;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -50,7 +50,7 @@ public class Record {
     /**
      * 评测结果
      */
-    private JudgeStateEnum state;
+    private JudgeStateEnum result;
 
     /**
      * 时间消耗
@@ -65,7 +65,7 @@ public class Record {
     /**
      * 权限
      */
-    private EntityPermissionEnum permission;
+    private EntityStateEnum state;
 
     /**
      * 创建时间
