@@ -1,6 +1,5 @@
 package org.oj.server.handler;
 
-import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,8 +17,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 授权拦截器
@@ -36,21 +33,20 @@ public class AuthorizationFilter {
         UserAuth userAuth = Request.user.get();
         List<String> roleIds = userAuth.getRoleIds();
 
-        AtomicBoolean flag = new AtomicBoolean(false);
-        roleIds.forEach(id -> {
-            Optional<Role> byId = roleRepository.findById(id);
-            if (byId.isEmpty()) return;
-
-            Role role = byId.get();
+        List<Role> allById = roleRepository.findAllById(roleIds);
+        allById.forEach(role -> {
             Map<String, PermissionEnum> map = role.getPermissionIds();
             // 如果包含该权限
             if (map.containsKey(permission.getId())) {
-                flag.set(true);
-                Request.permission.set(map.get(permission.getId()));
+                // 选出更大的权限
+                Request.permission.set(
+                        PermissionEnum.max(Request.permission.get(),
+                                map.get(permission.getId()))
+                );
             }
         });
 
-        if (!flag.get()) {
+        if (Request.permission.get() == null) {
             // 无操作权限
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }

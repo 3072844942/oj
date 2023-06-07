@@ -94,7 +94,7 @@ public class ArticleService {
         Article article = findById(id);
 
         // 不是自己的， 并且没有写权限
-        if (!article.getUserId().equals(Request.user.get().getId()) && !Request.permission.get().equals(PermissionEnum.WRITE)) {
+        if (!PermissionUtil.enableWrite(article.getUserId())) {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
 
@@ -111,7 +111,7 @@ public class ArticleService {
 
     public void delete(ConditionDTO conditionDTO) {
         // 批量删除需要写权限
-        if (!Request.permission.get().equals(PermissionEnum.WRITE)) {
+        if (!PermissionUtil.enableWrite("")) {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
 
@@ -242,19 +242,17 @@ public class ArticleService {
             }
         }
 
+        WarnException checked = ConditionDTO.check(conditionDTO);
+        if (checked != null) {
+            throw checked;
+        }
+
         return find(article, conditionDTO.getCurrent(), conditionDTO.getSize());
     }
 
     private PageVO<Article> find(Article article, Integer current, Integer size) {
         Example<Article> example = Example.of(article);
         long count = articleRepository.count(example);
-
-        if (current < 0 || current > current / size) {
-            throw new ErrorException("页码超限");
-        }
-        if (size < 0 || size > 100) {
-            throw new ErrorException("请求数量过大");
-        }
 
         // 优先置顶， 更新时间降序
         Page<Article> all = articleRepository.findAll(example, PageRequest.of(current - 1, size, Sort.by(

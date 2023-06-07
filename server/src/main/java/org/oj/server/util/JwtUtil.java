@@ -19,7 +19,7 @@ public class JwtUtil {
     /**
      * 有效期
      */
-    private static final Long JWT_TTL = 24 * 60 * 60 * 1000L;// 60 * 60 *1000  一个小时
+    private static final Long JWT_TTL = 24 * 60 * 60 * 1000L;// 24 * 60 * 60 *1000  一天
 
     /**
      * 秘钥明文

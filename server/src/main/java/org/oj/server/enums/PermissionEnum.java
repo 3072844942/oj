@@ -18,4 +18,11 @@ public enum PermissionEnum {
     ;
     private final Integer code ;
     private final String desc;
+
+    public static PermissionEnum max(PermissionEnum p1, PermissionEnum p2) {
+        int p = p1.getCode().compareTo(p2.getCode());
+        if (p > 0) return p1;
+        else if (p == 0) return p1;
+        else return p2;
+    }
 }

@@ -1,6 +1,7 @@
 package org.oj.server.handler;
 
 import io.jsonwebtoken.Claims;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.oj.server.dao.PermissionRepository;
@@ -18,6 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -25,6 +29,8 @@ import java.util.Optional;
  */
 @Component
 public class JwtAuthenticationFilter implements HandlerInterceptor {
+    // 权限集合
+    private static final Map<String, Permission> permissionMap = new HashMap<>();
     @Autowired
     private PermissionRepository permissionRepository;
     @Autowired
@@ -71,12 +77,11 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
 
         // 请求路由
         String uri = request.getRequestURI();
-        Optional<Permission> byUrl = permissionRepository.findByUrl(uri);
-        if (byUrl.isEmpty()) {
+        if (!permissionMap.containsKey(uri)) {
             throw new ErrorException(StatusCodeEnum.SYSTEM_ERROR);
         }
 
-        Permission permission = byUrl.get();
+        Permission permission = permissionMap.get(uri);
         // 允许匿名访问
         if (permission.getIsAnonymous()) {
             // 放行
@@ -89,5 +94,14 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
 
         // 进行授权
         return authorizationFilter.doFilterInternal(request, response, permission);
+    }
+
+    /**
+     * 预加载所有权限
+     */
+    @PostConstruct
+    private void init() {
+        List<Permission> all = permissionRepository.findAll();
+        all.forEach(permission -> permissionMap.put(permission.getUrl(), permission));
     }
 }

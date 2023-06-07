@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.exception.ErrorException;
+import org.oj.server.exception.WarnException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,4 +57,14 @@ public class ConditionDTO {
     @Builder.Default
     @Schema(description = "id集合")
     private List<String> ids = new ArrayList<>();
+
+    public static WarnException check(ConditionDTO conditionDTO) {
+        if (conditionDTO.current < 0) {
+            return new WarnException("页码超限");
+        }
+        if (conditionDTO.size < 0 || conditionDTO.size > 100) {
+            return new WarnException("请求数量过大");
+        }
+        return null;
+    }
 }

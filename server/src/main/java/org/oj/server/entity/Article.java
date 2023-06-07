@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.oj.server.dto.ArticleDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -94,6 +95,11 @@ public class Article {
 
     public static Article of(ArticleDTO articleDTO) {
         Article article = BeanCopyUtils.copyObject(articleDTO, Article.class);
+        // 过滤文本
+        article.setContent(SensitiveUtils.filter(article.getContent()));
+        article.setSummary(SensitiveUtils.filter(article.getSummary()));
+        article.setTitle(SensitiveUtils.filter(article.getTitle()));
+        // 设置权限
         article.setState(EntityStateEnum.valueOf(articleDTO.getState()));
         return article;
     }
