@@ -25,3 +25,10 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: org.oj.server
+# knife4j的增强配置，不需要增强可以不配
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    enable-home-custom: true
+    home-custom-location: classpath:markdown/home.md

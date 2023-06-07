@@ -1,5 +1,6 @@
 package org.oj.server.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,21 +18,25 @@ import org.oj.server.util.BeanCopyUtils;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Schema(description = "文章上下篇")
 public class ArticlePaginationVO {
 
     /**
      * id
      */
+    @Schema(description = "id")
     private Integer id;
 
     /**
      * 文章缩略图
      */
+    @Schema(description = "文章缩略图")
     private String cover;
 
     /**
      * 标题
      */
+    @Schema(description = "标题")
     private String title;
 
 

@@ -50,7 +50,7 @@ public class ArticleService {
         Article article = Article.of(articleDTO);
         // 设置作者
         article.setUserId(Request.user.get().getId());
-        article.setStatus(EntityStateEnum.DRAFT);
+        article.setState(EntityStateEnum.DRAFT);
 
         article = articleRepository.insert(article);
 
@@ -74,7 +74,7 @@ public class ArticleService {
         Article article = Article.of(articleDTO);
         // 设置作者
         article.setUserId(Request.user.get().getId());
-        article.setStatus(EntityStateEnum.DRAFT);
+        article.setState(EntityStateEnum.DRAFT);
 
         article = articleRepository.save(article);
 
@@ -115,7 +115,7 @@ public class ArticleService {
         Article article = findById(conditionDTO.getId());
 
         // 设置审核
-        article.setStatus(EntityStateEnum.PUBLIC);
+        article.setState(EntityStateEnum.PUBLIC);
         article = articleRepository.save(article);
 
         return ArticleDTO.of(article);
@@ -124,7 +124,7 @@ public class ArticleService {
     public ArticleDTO hideOne(ConditionDTO conditionDTO) {
         Article article = findById(conditionDTO.getId());
 
-        article.setStatus(EntityStateEnum.DRAFT);
+        article.setState(EntityStateEnum.DRAFT);
         article = articleRepository.save(article);
 
         return ArticleDTO.of(article);
@@ -133,7 +133,7 @@ public class ArticleService {
     public ArticleDTO publishOne(ConditionDTO conditionDTO) {
         Article article = findById(conditionDTO.getId());
 
-        article.setStatus(EntityStateEnum.REVIEW);
+        article.setState(EntityStateEnum.REVIEW);
         article = articleRepository.save(article);
 
         return ArticleDTO.of(article);
@@ -142,7 +142,7 @@ public class ArticleService {
     public ArticleDTO recycleOne(ConditionDTO conditionDTO) {
         Article article = findById(conditionDTO.getId());
 
-        article.setStatus(EntityStateEnum.DELETE);
+        article.setState(EntityStateEnum.DELETE);
         article = articleRepository.save(article);
 
         return ArticleDTO.of(article);
@@ -151,7 +151,7 @@ public class ArticleService {
     public ArticleDTO recover(ConditionDTO conditionDTO) {
         Article article = findById(conditionDTO.getId());
 
-        article.setStatus(EntityStateEnum.DRAFT);
+        article.setState(EntityStateEnum.DRAFT);
         article = articleRepository.save(article);
 
         return ArticleDTO.of(article);
@@ -160,24 +160,24 @@ public class ArticleService {
     public ArticleVO findOne(ConditionDTO conditionDTO) {
         Article article = findById(conditionDTO.getId());
         // 无读权限
-        if (!PermissionUtil.enableRead(article.getStatus(), article.getUserId())) {
+        if (!PermissionUtil.enableRead(article.getState(), article.getUserId())) {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
         ArticleVO articleVO = ArticleVO.of(article);
         // 查询上一条， 下一条
-        articleVO.setLastArticle(
+        articleVO.setLast(
                 ArticlePaginationVO.of(
                         articleRepository.findFirstByUpdateTimeBeforeOrderByUpdateTimeDesc(articleVO.getUpdateTime())
                 )
         );
-        articleVO.setNextArticle(
+        articleVO.setNext(
                 ArticlePaginationVO.of(
                         articleRepository.findFirstByUpdateTimeAfterOrderByUpdateTime(articleVO.getUpdateTime())
                 )
         );
         // 查询最新文章
         Page<Article> newList = articleRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Order.desc("updateTime"))));
-        articleVO.setNewestArticleList(newList.map(ArticleRecommendVO::of).toList());
+        articleVO.setNewesList(newList.map(ArticleRecommendVO::of).toList());
         return articleVO;
     }
 
@@ -216,9 +216,8 @@ public class ArticleService {
 
     private PageVO<Article> find(EntityStateEnum state, ConditionDTO conditionDTO) {
         // 查找文章
-        Article article = Article.builder()
-                .status(state)
-                .build();
+        Article article = Article.builder().build();
+        article.setState(state);
 
         // 指定了作者
         if (StringUtils.isPresent(conditionDTO.getUserId())) {

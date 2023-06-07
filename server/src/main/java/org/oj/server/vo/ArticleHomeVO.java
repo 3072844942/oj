@@ -1,5 +1,6 @@
 package org.oj.server.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,48 +21,68 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Schema(description = "首页文章列表信息")
 public class ArticleHomeVO {
 
     /**
+     * 文章状态
+     */
+    @Schema(description = "状态")
+    protected Integer state;
+    /**
+     * 修改时间
+     */
+    @Schema(description = "更新时间")
+    protected Long updateTime;
+    /**
+     * 创建时间
+     */
+    @Schema(description = "创建时间")
+    protected Long creatTime;
+    /**
      * id
      */
+    @Schema(description = "id")
     private String id;
-
     /**
      * 作者
      */
+    @Schema(description = "作者id")
     private String userId;
-
     /**
      * 文章缩略图
      */
+    @Schema(description = "缩略图")
     private String cover;
-
     /**
      * 标题
      */
+    @Schema(description = "标题")
     private String title;
     /**
      * 摘要
      */
+    @Schema(description = "摘要")
     private String summary;
-
     /**
      * 是否置顶
      */
+    @Schema(description = "置顶")
     private Boolean isTop;
-
     /**
      * 标签Id
      */
+    @Schema(description = "标签id")
     private List<String> tagIds;
-
     /**
      * 分类id
      */
+    @Schema(description = "分类id")
     private String categoryId;
 
     public static ArticleHomeVO of(Article article) {
-        return BeanCopyUtils.copyObject(article, ArticleHomeVO.class);
+        ArticleHomeVO articleHomeVO = BeanCopyUtils.copyObject(article, ArticleHomeVO.class);
+        articleHomeVO.setState(article.getState().getCode());
+        return articleHomeVO;
     }
 }

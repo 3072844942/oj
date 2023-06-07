@@ -1,5 +1,6 @@
 package org.oj.server.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -73,27 +74,27 @@ public class Article {
      * 是否置顶
      */
     private Boolean isTop;
-
     /**
      * 文章状态
      */
-    private EntityStateEnum status;
-
-    /**
-     * 创建时间
-     */
-    @CreatedDate
-    private Long createTime;
+    protected EntityStateEnum state;
 
     /**
      * 修改时间
      */
     @LastModifiedDate
-    private Long updateTime;
+    protected Long updateTime;
+
+    /**
+     * 创建时间
+     */
+    @CreatedDate
+    protected Long creatTime;
+
 
     public static Article of(ArticleDTO articleDTO) {
         Article article = BeanCopyUtils.copyObject(articleDTO, Article.class);
-        article.setStatus(EntityStateEnum.valueOf(articleDTO.getState()));
+        article.setState(EntityStateEnum.valueOf(articleDTO.getState()));
         return article;
     }
 }
