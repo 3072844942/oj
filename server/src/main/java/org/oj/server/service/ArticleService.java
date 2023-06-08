@@ -1,6 +1,5 @@
 package org.oj.server.service;
 
-import jakarta.annotation.PostConstruct;
 import org.bson.types.ObjectId;
 import org.oj.server.dao.ArticleRepository;
 import org.oj.server.dto.ArticleDTO;
@@ -8,7 +7,6 @@ import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.Request;
 import org.oj.server.entity.Article;
 import org.oj.server.enums.EntityStateEnum;
-import org.oj.server.enums.PermissionEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
@@ -51,13 +49,19 @@ public class ArticleService {
                 throw new ErrorException(StatusCodeEnum.DATA_EXIST);
             }
             // 不存在则置空
-            articleDTO.setId("");
+            articleDTO.setId(null);
         }
 
         Article article = Article.of(articleDTO);
         // 设置作者
-        article.setUserId(Request.user.get().getId());
+        if (Request.user.get() != null) {
+            article.setUserId(Request.user.get().getId());
+        }
         article.setState(EntityStateEnum.DRAFT);
+        // 没有写权限
+        if (!PermissionUtil.enableWrite("")) {
+            article.setIsTop(false);
+        }
 
         article = articleRepository.insert(article);
 
@@ -73,27 +77,32 @@ public class ArticleService {
         if (StringUtils.isEmpty(articleDTO.getId())) {
             throw new WarnException(StatusCodeEnum.FAILED_PRECONDITION);
         }
+        Optional<Article> byId = articleRepository.findById(articleDTO.getId());
         // 数据不存在
-        if (!articleRepository.existsById(articleDTO.getId())) {
+        if (byId.isEmpty()) {
             throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
+        }
+        // 不是自己的， 或者没有写权限
+        if (!PermissionUtil.enableWrite(byId.get().getUserId())) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
 
         Article article = Article.of(articleDTO);
-        // 设置作者
-        article.setUserId(Request.user.get().getId());
+        // 重置为草稿
         article.setState(EntityStateEnum.DRAFT);
-
+        // 没有写权限
+        if (!PermissionUtil.enableWrite("")) {
+            article.setIsTop(false);
+        }
+        // 保存
         article = articleRepository.save(article);
-
         return ArticleDTO.of(article);
     }
 
-    public void deleteOne(ConditionDTO conditionDTO) {
-        String id = conditionDTO.getId();
-
+    public void deleteOne(String id) {
         Article article = findById(id);
 
-        // 不是自己的， 并且没有写权限
+        // 不是自己的， 或没有写权限
         if (!PermissionUtil.enableWrite(article.getUserId())) {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
@@ -118,18 +127,28 @@ public class ArticleService {
         articleRepository.deleteAllById(conditionDTO.getIds());
     }
 
-    public ArticleDTO verifyOne(ConditionDTO conditionDTO) {
-        Article article = findById(conditionDTO.getId());
+    public ArticleDTO verifyOne(String id) {
+        Article article = findById(id);
 
-        // 设置审核
+        // 不是待审核的文章
+        if (!article.getState().equals(EntityStateEnum.REVIEW)) {
+            throw new WarnException(StatusCodeEnum.FAIL);
+        }
+
+        // 设置公开
         article.setState(EntityStateEnum.PUBLIC);
         article = articleRepository.save(article);
 
         return ArticleDTO.of(article);
     }
 
-    public ArticleDTO hideOne(ConditionDTO conditionDTO) {
-        Article article = findById(conditionDTO.getId());
+    public ArticleDTO hideOne(String id) {
+        Article article = findById(id);
+
+        // 需要写权限
+        if (!PermissionUtil.enableWrite(article.getUserId())) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
 
         article.setState(EntityStateEnum.DRAFT);
         article = articleRepository.save(article);
@@ -137,8 +156,13 @@ public class ArticleService {
         return ArticleDTO.of(article);
     }
 
-    public ArticleDTO publishOne(ConditionDTO conditionDTO) {
-        Article article = findById(conditionDTO.getId());
+    public ArticleDTO publishOne(String id) {
+        Article article = findById(id);
+
+        // 需要写权限
+        if (!PermissionUtil.enableWrite(article.getUserId())) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
 
         article.setState(EntityStateEnum.REVIEW);
         article = articleRepository.save(article);
@@ -146,8 +170,13 @@ public class ArticleService {
         return ArticleDTO.of(article);
     }
 
-    public ArticleDTO recycleOne(ConditionDTO conditionDTO) {
-        Article article = findById(conditionDTO.getId());
+    public ArticleDTO recycleOne(String id) {
+        Article article = findById(id);
+
+        // 需要写权限
+        if (!PermissionUtil.enableWrite(article.getUserId())) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
 
         article.setState(EntityStateEnum.DELETE);
         article = articleRepository.save(article);
@@ -155,17 +184,8 @@ public class ArticleService {
         return ArticleDTO.of(article);
     }
 
-    public ArticleDTO recover(ConditionDTO conditionDTO) {
-        Article article = findById(conditionDTO.getId());
-
-        article.setState(EntityStateEnum.DRAFT);
-        article = articleRepository.save(article);
-
-        return ArticleDTO.of(article);
-    }
-
-    public ArticleVO findOne(ConditionDTO conditionDTO) {
-        Article article = findById(conditionDTO.getId());
+    public ArticleVO findOne(String id) {
+        Article article = findById(id);
         // 无读权限
         if (!PermissionUtil.enableRead(article.getState(), article.getUserId())) {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
@@ -260,5 +280,37 @@ public class ArticleService {
                 Sort.Order.desc("updateTime")
         )));
         return new PageVO<>(all.toList(), count);
+    }
+
+    public PageVO<ArticleSearchDTO> find(ArticleDTO articleDTO, ConditionDTO conditionDTO) {
+        WarnException checked = ConditionDTO.check(conditionDTO);
+        if (checked != null) {
+            throw checked;
+        }
+
+        // 查询条件
+        Query query = new Query();
+        if (articleDTO != null) {
+            if (articleDTO.getUserId() != null)
+                query.addCriteria(Criteria.where("userId").regex(articleDTO.getUserId()));
+            if (articleDTO.getTitle() != null) query.addCriteria(Criteria.where("title").regex(articleDTO.getTitle()));
+            if (articleDTO.getContent() != null)
+                query.addCriteria(Criteria.where("content").regex(articleDTO.getContent()));
+            if (articleDTO.getCategoryId() != null)
+                query.addCriteria(Criteria.where("categoryId").is(articleDTO.getContent()));
+            if (articleDTO.getTagIds() != null && articleDTO.getTagIds().size() != 0)
+                query.addCriteria(Criteria.where("tagIds").in(articleDTO.getTagIds()));
+            if (articleDTO.getState() != null)
+                query.addCriteria(Criteria.where("state").is(EntityStateEnum.valueOf(articleDTO.getState())));
+        }
+
+        long count = mongoTemplate.count(query, Article.class);
+
+        query.skip((conditionDTO.getCurrent() - 1L) * conditionDTO.getSize()).limit(conditionDTO.getSize());
+        List<Article> articles = mongoTemplate.find(query, Article.class);
+        return new PageVO<>(
+                articles.stream().map(ArticleSearchDTO::of).toList(),
+                count
+        );
     }
 }

@@ -16,8 +16,9 @@ import java.util.List;
  * @date 2021/07/29
  * @since 2020-05-18
  */
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "文章信息")
 public class ArticleDTO {
@@ -93,7 +94,7 @@ public class ArticleDTO {
 
     public static ArticleDTO of(Article article) {
         ArticleDTO articleDTO = BeanCopyUtils.copyObject(article, ArticleDTO.class);
-        articleDTO.setState(articleDTO.getState());
+        articleDTO.setState(article.getState().getCode());
         return articleDTO;
     }
 }

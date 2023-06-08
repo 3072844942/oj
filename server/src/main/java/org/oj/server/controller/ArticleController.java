@@ -19,11 +19,18 @@ public class ArticleController extends BaseController {
     @Autowired
     private ArticleService articleService;
 
-    @Operation(summary = "查找文章")
-    @GetMapping("find")
-    public Object findOne(ConditionDTO conditionDTO) {
-        return ok(articleService.findOne(conditionDTO));
+    @Operation(summary = "根据id查找文章")
+    @GetMapping("{articleId}")
+    public Object findOne(@PathVariable String articleId) {
+        return ok(articleService.findOne(articleId));
     }
+
+    @Operation(summary = "根据实体查找文章")
+    @GetMapping("find")
+    public Object find(ArticleDTO articleDTO, ConditionDTO conditionDTO) {
+        return ok(articleService.find(articleDTO, conditionDTO));
+    }
+
 
     @Operation(summary = "查找首页文章列表")
     @GetMapping("list")
@@ -62,33 +69,33 @@ public class ArticleController extends BaseController {
     }
 
     @Operation(summary = "发布文章")
-    @PatchMapping("publish")
-    public Object publishOne(@RequestBody ConditionDTO conditionDTO) {
-        return ok(articleService.publishOne(conditionDTO));
+    @PatchMapping("publish/{articleId}")
+    public Object publishOne(@PathVariable String articleId) {
+        return ok(articleService.publishOne(articleId));
     }
 
     @Operation(summary = "隐藏文章")
-    @PatchMapping("hide")
-    public Object hideOne(@RequestBody ConditionDTO conditionDTO) {
-        return ok(articleService.hideOne(conditionDTO));
+    @PatchMapping("hide/{articleId}")
+    public Object hideOne(@PathVariable String articleId) {
+        return ok(articleService.hideOne(articleId));
     }
 
     @Operation(summary = "审核文章")
-    @PatchMapping("verify")
-    public Object verifyOne(@RequestBody ConditionDTO conditionDTO) {
-        return ok(articleService.verifyOne(conditionDTO));
+    @PatchMapping("verify/{articleId}")
+    public Object verifyOne(@PathVariable String articleId) {
+        return ok(articleService.verifyOne(articleId));
     }
 
     @Operation(summary = "回收文章")
-    @PatchMapping("recycle")
-    public Object recycleOne(@RequestBody ConditionDTO conditionDTO) {
-        return ok(articleService.recycleOne(conditionDTO));
+    @PatchMapping("recycle/{articleId}")
+    public Object recycleOne(@PathVariable String articleId) {
+        return ok(articleService.recycleOne(articleId));
     }
 
     @Operation(summary = "恢复文章到草稿")
-    @PatchMapping("recover")
-    public Object recoverOne(@RequestBody ConditionDTO conditionDTO) {
-        return ok(articleService.recover(conditionDTO));
+    @PatchMapping("recover/{articleId}")
+    public Object recoverOne(@PathVariable String articleId) {
+        return ok(articleService.hideOne(articleId));
     }
 
     @Operation(summary = "添加文章")
@@ -98,9 +105,9 @@ public class ArticleController extends BaseController {
     }
 
     @Operation(summary = "删除文章")
-    @DeleteMapping("delete")
-    public Object deleteOne(@RequestBody ConditionDTO conditionDTO) {
-        articleService.deleteOne(conditionDTO);
+    @DeleteMapping("delete/{articleId}")
+    public Object deleteOne(@PathVariable String articleId) {
+        articleService.deleteOne(articleId);
         return ok();
     }
 

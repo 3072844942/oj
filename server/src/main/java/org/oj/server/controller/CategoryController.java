@@ -13,16 +13,22 @@ import org.springframework.web.bind.annotation.*;
  * @since 2023/5/31 下午3:18
  */
 @RestController
-@RequestMapping("article")
+@RequestMapping("category")
 @Tag(name = "分类接口")
 public class CategoryController extends BaseController {
     @Autowired
     private CategoryService categoryService;
 
-    @Operation(summary = "查找分类")
-    @GetMapping
+    @Operation(summary = "查找分类列表")
+    @GetMapping("list")
     public Object find(ConditionDTO conditionDTO) {
         return categoryService.find(conditionDTO);
+    }
+
+    @Operation(summary = "根据条件查找份额里")
+    @GetMapping("find")
+    public Object find(CategoryDTO categoryDTO, ConditionDTO conditionDTO) {
+        return categoryService.find(categoryDTO, conditionDTO);
     }
 
     @Operation(summary = "插入分类")
@@ -31,17 +37,17 @@ public class CategoryController extends BaseController {
         return ok(categoryService.insertOne(categoryDTO));
     }
 
-    @Operation(summary = "删除分类")
-    @DeleteMapping("delete")
-    public Object deleteOne(@RequestBody ConditionDTO conditionDTO) {
-        categoryService.deleteOne(conditionDTO);
-        return ok();
-    }
-
     @Operation(summary = "批量删除分类")
     @DeleteMapping("delete/list")
     public Object delete(@RequestBody ConditionDTO conditionDTO) {
         categoryService.delete(conditionDTO);
+        return ok();
+    }
+
+    @Operation(summary = "删除分类")
+    @DeleteMapping("delete/{categoryId}")
+    public Object deleteOne(@PathVariable String categoryId) {
+        categoryService.deleteOne(categoryId);
         return ok();
     }
 }

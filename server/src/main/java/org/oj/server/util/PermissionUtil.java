@@ -18,13 +18,16 @@ public class PermissionUtil {
      * @return 读状态
      */
     public static boolean enableRead(EntityStateEnum state, String authorId) {
-        PermissionEnum permission = Request.permission.get();
         // 已删除的禁止读
         if (state.equals(EntityStateEnum.DELETE)) return false;
-        // 角色具有 读 / 写权限
-        if (permission.equals(PermissionEnum.WRITE) || permission.equals(PermissionEnum.READ)) return true;
         // 是本人的
         if (Request.user.get() != null && Request.user.get().getId().equals(authorId)) return true;
+
+        PermissionEnum permission = Request.permission.get();
+        // 角色具有 读 / 写权限
+        if (permission != null) {
+            if (permission.equals(PermissionEnum.WRITE) || permission.equals(PermissionEnum.READ)) return true;
+        }
         // 实体是公开
         return state.equals(EntityStateEnum.PUBLIC);
     }
@@ -37,6 +40,7 @@ public class PermissionUtil {
         // 是本人的
         if (Request.user.get() != null && Request.user.get().getId().equals(authorId)) return true;
         // 角色具有写权限
-        return Request.permission.get().equals(PermissionEnum.WRITE);
+        PermissionEnum permissionEnum = Request.permission.get();
+        return permissionEnum != null && permissionEnum.equals(PermissionEnum.WRITE);
     }
 }
