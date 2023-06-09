@@ -58,6 +58,9 @@ public class ConditionDTO {
     @Schema(description = "id集合")
     private List<String> ids = new ArrayList<>();
 
+    @Schema(description = "查找状态")
+    private Integer state;
+
     public static WarnException check(ConditionDTO conditionDTO) {
         if (conditionDTO.current < 0) {
             return new WarnException("页码超限");

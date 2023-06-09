@@ -4,7 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.dto.CommentDTO;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -63,4 +66,14 @@ public class Comment {
      * 创建时间
      */
     private Long createTime;
+
+    public static Comment of(CommentDTO commentDTO) {
+        Comment comment = BeanCopyUtils.copyObject(commentDTO, Comment.class);
+
+        comment.setState(EntityStateEnum.valueOf(commentDTO.getState()));
+
+        comment.setContent(SensitiveUtils.filter(comment.getContent()));
+
+        return comment;
+    }
 }

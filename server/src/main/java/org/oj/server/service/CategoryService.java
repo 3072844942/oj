@@ -1,28 +1,27 @@
 package org.oj.server.service;
 
+import jakarta.annotation.PostConstruct;
 import org.oj.server.dao.CategoryRepository;
 import org.oj.server.dto.CategoryDTO;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.entity.Article;
 import org.oj.server.entity.Category;
-import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
 import org.oj.server.util.PermissionUtil;
 import org.oj.server.util.StringUtils;
-import org.oj.server.vo.ArticleSearchDTO;
 import org.oj.server.vo.CategoryVO;
 import org.oj.server.vo.PageVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author march
@@ -30,6 +29,7 @@ import java.util.List;
  */
 @Service
 public class CategoryService {
+    public static final Map<String, Category> categoryMap = new HashMap<>();
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
@@ -53,17 +53,19 @@ public class CategoryService {
 
         Category category = Category.of(categoryDTO);
         category = categoryRepository.insert(category);
+        categoryMap.put(category.getId(), category);
 
         return CategoryVO.of(category);
     }
 
-    public void delete(ConditionDTO conditionDTO) {
+    public void delete(List<String> ids) {
         // 删除需要写权限
         if (!PermissionUtil.enableWrite("")) {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
 
-        categoryRepository.deleteAllById(conditionDTO.getIds());
+        categoryRepository.deleteAllById(ids);
+        ids.forEach(categoryMap::remove);
     }
 
     public void deleteOne(String id) {
@@ -73,6 +75,7 @@ public class CategoryService {
         }
 
         categoryRepository.deleteById(id);
+        categoryMap.remove(id);
     }
 
     public PageVO<CategoryVO> find(ConditionDTO conditionDTO) {
@@ -81,22 +84,11 @@ public class CategoryService {
             throw checked;
         }
 
-        Page<Category> all = categoryRepository.findAll(PageRequest.of(conditionDTO.getCurrent() - 1, conditionDTO.getSize()));
-        long count = categoryRepository.count();
-
-        return new PageVO<>(all.map(CategoryVO::of).toList(), count);
-    }
-
-    public PageVO<CategoryVO> find(CategoryDTO categoryDTO, ConditionDTO conditionDTO) {
-        WarnException checked = ConditionDTO.check(conditionDTO);
-        if (checked != null) {
-            throw checked;
-        }
-
         // 查询条件
         Query query = new Query();
-        if (categoryDTO != null) {
-            if (categoryDTO.getTitle() != null) query.addCriteria(Criteria.where("title").regex(categoryDTO.getTitle()));
+        String keywords = conditionDTO.getKeywords();
+        if (keywords != null) {
+            query.addCriteria(Criteria.where("title").regex(keywords));
         }
 
         long count = mongoTemplate.count(query, Article.class);
@@ -107,5 +99,30 @@ public class CategoryService {
                 categories.stream().map(CategoryVO::of).toList(),
                 count
         );
+    }
+
+    public CategoryDTO updateOne(CategoryDTO categoryDTO) {
+        WarnException checked = CategoryDTO.check(categoryDTO);
+        if (checked != null) {
+            throw checked;
+        }
+
+        // 数据已存在
+        if (!categoryRepository.existsById(categoryDTO.getId())) {
+            throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
+        }
+
+        Category category = Category.of(categoryDTO);
+        category = categoryRepository.insert(category);
+        categoryMap.put(category.getId(), category);
+
+        return CategoryDTO.of(category);
+    }
+
+    @PostConstruct
+    private void init() {
+        // 预读取所有分类， 减少查询时间
+        List<Category> all = categoryRepository.findAll();
+        all.forEach(category -> categoryMap.put(category.getId(), category));
     }
 }

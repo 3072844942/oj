@@ -1,7 +1,10 @@
 package org.oj.server.dto;
 
 import lombok.*;
+import org.oj.server.entity.Comment;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.exception.WarnException;
+import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -11,7 +14,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * @author bin
  * @date 2021/07/29
  */
-@Getter
+@Data
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class CommentDTO {
 
@@ -49,4 +54,14 @@ public class CommentDTO {
      * 是否审核
      */
     private Integer state;
+
+    public static WarnException check(CommentDTO commentDTO) {
+        return null;
+    }
+
+    public static CommentDTO of(Comment comment) {
+        CommentDTO commentDTO = BeanCopyUtils.copyObject(comment, CommentDTO.class);
+        commentDTO.setState(comment.getState().getCode());
+        return commentDTO;
+    }
 }

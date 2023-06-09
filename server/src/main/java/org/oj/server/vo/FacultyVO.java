@@ -5,22 +5,18 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.oj.server.entity.Category;
-import org.oj.server.util.BeanCopyUtils;
+import org.springframework.data.annotation.Id;
 
 /**
- * 分类
- *
  * @author march
- * @since 2023/6/7 下午8:07
+ * @since 2023/6/9 上午9:10
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "分类")
-public class CategoryVO {
-
+@Schema(description = "学院信息")
+public class FacultyVO {
     /**
      * id
      */
@@ -28,18 +24,20 @@ public class CategoryVO {
     private String id;
 
     /**
-     * 分类名
+     * 学院名称
      */
-    @Schema(description = "标题")
+    @Schema(description = "名称")
     private String title;
+
+    /**
+     * 学院描述
+     */
+    @Schema(description = "描述")
+    private String desc;
 
     /**
      * 创建时间
      */
     @Schema(description = "创建时间")
     private Long createTime;
-
-    public static CategoryVO of(Category category) {
-        return BeanCopyUtils.copyObject(category, CategoryVO.class);
-    }
 }

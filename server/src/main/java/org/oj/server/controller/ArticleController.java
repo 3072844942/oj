@@ -8,6 +8,8 @@ import org.oj.server.service.ArticleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * @author march
  * @since 2023/5/31 下午3:17
@@ -25,40 +27,9 @@ public class ArticleController extends BaseController {
         return ok(articleService.findOne(articleId));
     }
 
-    @Operation(summary = "根据实体查找文章")
-    @GetMapping("find")
-    public Object find(ArticleDTO articleDTO, ConditionDTO conditionDTO) {
-        return ok(articleService.find(articleDTO, conditionDTO));
-    }
-
-
-    @Operation(summary = "查找首页文章列表")
+    @Operation(summary = "查找文章列表")
     @GetMapping("list")
-    public Object find(ConditionDTO conditionDTO) {
-        return ok(articleService.find(conditionDTO));
-    }
-
-    @Operation(summary = "查找草稿文章列表")
-    @PostMapping("list/draft")
-    public Object findDraft(@RequestBody ConditionDTO conditionDTO) {
-        return ok(articleService.findDraft(conditionDTO));
-    }
-
-    @Operation(summary = "查找回收站文章列表")
-    @PostMapping("list/recycle")
-    public Object findRecycle(@RequestBody ConditionDTO conditionDTO) {
-        return ok(articleService.findRecycle(conditionDTO));
-    }
-
-    @Operation(summary = "查找待审核文章列表")
-    @PostMapping("list/review")
-    public Object findReview(@RequestBody ConditionDTO conditionDTO) {
-        return ok(articleService.findReview(conditionDTO));
-    }
-
-    @Operation(summary = "查找公开文章列表")
-    @PostMapping("list/public")
-    public Object findPublic(@RequestBody ConditionDTO conditionDTO) {
+    public Object list(ConditionDTO conditionDTO) {
         return ok(articleService.find(conditionDTO));
     }
 
@@ -113,8 +84,8 @@ public class ArticleController extends BaseController {
 
     @Operation(summary = "批量删除文章")
     @DeleteMapping("delete/list")
-    public Object delete(@RequestBody ConditionDTO conditionDTO) {
-        articleService.delete(conditionDTO);
+    public Object delete(@RequestBody List<String> ids) {
+        articleService.delete(ids);
         return ok();
     }
 }

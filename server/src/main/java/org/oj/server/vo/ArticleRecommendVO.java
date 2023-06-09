@@ -25,7 +25,7 @@ public class ArticleRecommendVO {
      * id
      */
     @Schema(description = "id")
-    private Integer id;
+    private String id;
 
     /**
      * 文章缩略图

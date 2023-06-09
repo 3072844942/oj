@@ -29,7 +29,10 @@ import java.util.Optional;
  */
 @Component
 public class JwtAuthenticationFilter implements HandlerInterceptor {
-    // 权限集合
+    /**
+     * 权限集合
+     * url - permission
+     */
     private static final Map<String, Permission> permissionMap = new HashMap<>();
     @Autowired
     private PermissionRepository permissionRepository;

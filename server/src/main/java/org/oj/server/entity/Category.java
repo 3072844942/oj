@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.oj.server.dto.CategoryDTO;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -41,6 +42,8 @@ public class Category {
     private Long createTime;
 
     public static Category of(CategoryDTO categoryDTO) {
-        return BeanCopyUtils.copyObject(categoryDTO, Category.class);
+        Category category = BeanCopyUtils.copyObject(categoryDTO, Category.class);
+        category.setTitle(SensitiveUtils.filter(category.getTitle()));
+        return category;
     }
 }

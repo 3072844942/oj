@@ -1,11 +1,13 @@
 package org.oj.server.service;
 
 import org.bson.types.ObjectId;
+import org.oj.server.constant.HtmlConst;
 import org.oj.server.dao.ArticleRepository;
 import org.oj.server.dto.ArticleDTO;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.Request;
 import org.oj.server.entity.Article;
+import org.oj.server.entity.UserInfo;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
@@ -14,7 +16,6 @@ import org.oj.server.util.PermissionUtil;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,6 +25,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -34,6 +36,8 @@ import java.util.Optional;
 public class ArticleService {
     @Autowired
     private ArticleRepository articleRepository;
+    @Autowired
+    private UserInfoService userInfoService;
     @Autowired
     private MongoTemplate mongoTemplate;
 
@@ -110,78 +114,29 @@ public class ArticleService {
         articleRepository.deleteById(id);
     }
 
-    public PageVO<ArticleHomeVO> find(ConditionDTO conditionDTO) {
-        // 查找公开的文章
-        PageVO<Article> pageVO = find(EntityStateEnum.PUBLIC, conditionDTO);
-        // 也许可以再多一些信息
-        List<ArticleHomeVO> list = pageVO.getList().stream().map(ArticleHomeVO::of).toList();
-        return new PageVO<>(list, pageVO.getTotal());
-    }
-
-    public void delete(ConditionDTO conditionDTO) {
+    public void delete(List<String> ids) {
         // 批量删除需要写权限
         if (!PermissionUtil.enableWrite("")) {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
 
-        articleRepository.deleteAllById(conditionDTO.getIds());
+        articleRepository.deleteAllById(ids);
     }
 
     public ArticleDTO verifyOne(String id) {
-        Article article = findById(id);
-
-        // 不是待审核的文章
-        if (!article.getState().equals(EntityStateEnum.REVIEW)) {
-            throw new WarnException(StatusCodeEnum.FAIL);
-        }
-
-        // 设置公开
-        article.setState(EntityStateEnum.PUBLIC);
-        article = articleRepository.save(article);
-
-        return ArticleDTO.of(article);
+        return updateOneState(id, EntityStateEnum.PUBLIC);
     }
 
     public ArticleDTO hideOne(String id) {
-        Article article = findById(id);
-
-        // 需要写权限
-        if (!PermissionUtil.enableWrite(article.getUserId())) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        article.setState(EntityStateEnum.DRAFT);
-        article = articleRepository.save(article);
-
-        return ArticleDTO.of(article);
+        return updateOneState(id, EntityStateEnum.DRAFT);
     }
 
     public ArticleDTO publishOne(String id) {
-        Article article = findById(id);
-
-        // 需要写权限
-        if (!PermissionUtil.enableWrite(article.getUserId())) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        article.setState(EntityStateEnum.REVIEW);
-        article = articleRepository.save(article);
-
-        return ArticleDTO.of(article);
+        return updateOneState(id, EntityStateEnum.REVIEW);
     }
 
     public ArticleDTO recycleOne(String id) {
-        Article article = findById(id);
-
-        // 需要写权限
-        if (!PermissionUtil.enableWrite(article.getUserId())) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        article.setState(EntityStateEnum.DELETE);
-        article = articleRepository.save(article);
-
-        return ArticleDTO.of(article);
+        return updateOneState(id, EntityStateEnum.DELETE);
     }
 
     public ArticleVO findOne(String id) {
@@ -211,27 +166,16 @@ public class ArticleService {
         // 查询最新文章
         Page<Article> newList = articleRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Order.desc("updateTime"))));
         articleVO.setNewesList(newList.map(ArticleRecommendVO::of).toList());
+
+        // 设置标签
+        articleVO.setCategory(CategoryVO.of(CategoryService.categoryMap.get(article.getCategoryId())));
+        articleVO.setTags(
+                article.getTagIds().stream().map(tagId -> TagVO.of(TagService.tagMap.get(tagId))).toList()
+        );
+        articleVO.setAuthor(UserProfileVO.of(userInfoService.findById(article.getUserId())));
+
         return articleVO;
     }
-
-    public PageVO<ArticleBackVO> findDraft(ConditionDTO conditionDTO) {
-        // 查找草稿的文章
-        PageVO<Article> pageVO = find(EntityStateEnum.DRAFT, conditionDTO);
-        return new PageVO<>(pageVO.getList().stream().map(ArticleBackVO::of).toList(), pageVO.getTotal());
-    }
-
-    public PageVO<ArticleBackVO> findRecycle(ConditionDTO conditionDTO) {
-        // 查找删除的文章
-        PageVO<Article> pageVO = find(EntityStateEnum.DELETE, conditionDTO);
-        return new PageVO<>(pageVO.getList().stream().map(ArticleBackVO::of).toList(), pageVO.getTotal());
-    }
-
-    public PageVO<?> findReview(ConditionDTO conditionDTO) {
-        // 查找待审核的文章
-        PageVO<Article> pageVO = find(EntityStateEnum.REVIEW, conditionDTO);
-        return new PageVO<>(pageVO.getList().stream().map(ArticleBackVO::of).toList(), pageVO.getTotal());
-    }
-
 
     private Article findById(String id) {
         // id为空
@@ -247,42 +191,21 @@ public class ArticleService {
         return byId.get();
     }
 
-    private PageVO<Article> find(EntityStateEnum state, ConditionDTO conditionDTO) {
-        // 查找文章
-        Article article = Article.builder().build();
+    private ArticleDTO updateOneState(String id, EntityStateEnum state) {
+        Article article = findById(id);
+
+        // 需要写权限
+        if (!PermissionUtil.enableWrite(article.getUserId())) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
+
         article.setState(state);
+        article = articleRepository.save(article);
 
-        // 指定了作者
-        if (StringUtils.isPresent(conditionDTO.getUserId())) {
-            article.setUserId(conditionDTO.getUserId());
-        } else {
-            // 不指定作者， 但是也没有读/写权限
-            if (!PermissionUtil.enableRead(EntityStateEnum.PUBLIC, article.getUserId())) {
-                throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-            }
-        }
-
-        WarnException checked = ConditionDTO.check(conditionDTO);
-        if (checked != null) {
-            throw checked;
-        }
-
-        return find(article, conditionDTO.getCurrent(), conditionDTO.getSize());
+        return ArticleDTO.of(article);
     }
 
-    private PageVO<Article> find(Article article, Integer current, Integer size) {
-        Example<Article> example = Example.of(article);
-        long count = articleRepository.count(example);
-
-        // 优先置顶， 更新时间降序
-        Page<Article> all = articleRepository.findAll(example, PageRequest.of(current - 1, size, Sort.by(
-                Sort.Order.desc("top"),
-                Sort.Order.desc("updateTime")
-        )));
-        return new PageVO<>(all.toList(), count);
-    }
-
-    public PageVO<ArticleSearchDTO> find(ArticleDTO articleDTO, ConditionDTO conditionDTO) {
+    public PageVO<ArticleSearchDTO> find(ConditionDTO conditionDTO) {
         WarnException checked = ConditionDTO.check(conditionDTO);
         if (checked != null) {
             throw checked;
@@ -290,27 +213,75 @@ public class ArticleService {
 
         // 查询条件
         Query query = new Query();
-        if (articleDTO != null) {
-            if (articleDTO.getUserId() != null)
-                query.addCriteria(Criteria.where("userId").regex(articleDTO.getUserId()));
-            if (articleDTO.getTitle() != null) query.addCriteria(Criteria.where("title").regex(articleDTO.getTitle()));
-            if (articleDTO.getContent() != null)
-                query.addCriteria(Criteria.where("content").regex(articleDTO.getContent()));
-            if (articleDTO.getCategoryId() != null)
-                query.addCriteria(Criteria.where("categoryId").is(articleDTO.getContent()));
-            if (articleDTO.getTagIds() != null && articleDTO.getTagIds().size() != 0)
-                query.addCriteria(Criteria.where("tagIds").in(articleDTO.getTagIds()));
-            if (articleDTO.getState() != null)
-                query.addCriteria(Criteria.where("state").is(EntityStateEnum.valueOf(articleDTO.getState())));
+        // 如果是自己的 || 有读写权限
+        if (PermissionUtil.enableRead(EntityStateEnum.DRAFT, conditionDTO.getId())) {
+            query.addCriteria(Criteria.where("state").is(EntityStateEnum.valueOf(conditionDTO.getState())));
+        } else {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
+
+        // 指定了作者
+        if (conditionDTO.getId() != null) {
+            query.addCriteria(Criteria.where("userId").is(conditionDTO.getId()));
+        }
+        // 匹配关键字
+        String keywords = conditionDTO.getKeywords();
+        if (keywords != null) {
+            query.addCriteria(new Criteria().orOperator(
+                    Criteria.where("title").regex(keywords),
+                    Criteria.where("content").regex(keywords),
+                    Criteria.where("categoryId").is(keywords)
+            ));
+        }
+        if (conditionDTO.getTags() != null && conditionDTO.getTags().size() != 0) {
+            query.addCriteria(Criteria.where("tagIds").in(conditionDTO.getTags()));
         }
 
         long count = mongoTemplate.count(query, Article.class);
 
         query.skip((conditionDTO.getCurrent() - 1L) * conditionDTO.getSize()).limit(conditionDTO.getSize());
-        List<Article> articles = mongoTemplate.find(query, Article.class);
+        List<Article> all = mongoTemplate.find(query, Article.class);
+
         return new PageVO<>(
-                articles.stream().map(ArticleSearchDTO::of).toList(),
+                // 设置高亮
+                parse(all.stream().peek(article -> {
+                    if (keywords != null) {
+                        article.setTitle(article.getTitle().replaceAll(keywords, HtmlConst.PRE_TAG + keywords + HtmlConst.POST_TAG));
+                        int index = article.getContent().indexOf(keywords);
+                        if (index != -1) {
+                            // 获取关键词前面的文字
+                            int preIndex = index > 25 ? index - 25 : 0;
+                            String preText = article.getContent().substring(preIndex, index);
+                            // 获取关键词到后面的文字
+                            int last = index + keywords.length();
+                            int postLength = article.getContent().length() - last;
+                            int postIndex = postLength > 175 ? last + 175 : last + postLength;
+                            String postText = article.getContent().substring(index, postIndex);
+                            // 文章内容高亮
+                            String articleContent = (preText + postText).replaceAll(keywords, HtmlConst.PRE_TAG + keywords + HtmlConst.POST_TAG);
+                            article.setSummary(articleContent);
+                        }
+                    }
+                }).toList()),
                 count
         );
+    }
+
+    private List<ArticleSearchDTO> parse(List<Article> all) {
+        List<String> userIds = all.stream().map(Article::getUserId).toList();
+        Map<String, UserInfo> infoMap = userInfoService.findAllById(userIds);
+
+        return all.stream()
+                .map(a -> {
+                    ArticleSearchDTO articleSearchDTO = ArticleSearchDTO.of(a);
+
+                    articleSearchDTO.setAuthor(UserProfileVO.of(infoMap.get(a.getUserId())));
+                    articleSearchDTO.setTags(
+                            a.getTagIds().stream().map(tagId -> TagVO.of(TagService.tagMap.get(tagId))).toList()
+                    );
+                    articleSearchDTO.setCategory(CategoryVO.of(CategoryService.categoryMap.get(a.getCategoryId())));
+                    return articleSearchDTO;
+                })
+                .toList();
     }
 }

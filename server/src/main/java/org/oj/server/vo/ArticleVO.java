@@ -47,17 +47,17 @@ public class ArticleVO {
      * 作者
      */
     @Schema(description = "作者id")
-    private String userId;
+    private UserProfileVO author;
     /**
      * 标签Id
      */
     @Schema(description = "标签id")
-    private List<String> tagIds;
+    private List<TagVO> tags;
     /**
      * 分类id
      */
     @Schema(description = "分类id")
-    private String categoryId;
+    private CategoryVO category;
     /**
      * 文章缩略图
      */

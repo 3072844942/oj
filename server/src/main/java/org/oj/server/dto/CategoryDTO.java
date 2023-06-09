@@ -2,8 +2,10 @@ package org.oj.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+import org.oj.server.entity.Category;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
+import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -34,5 +36,9 @@ public class CategoryDTO {
 
     public static WarnException check(CategoryDTO categoryDTO) {
         return null;
+    }
+
+    public static CategoryDTO of(Category category) {
+        return BeanCopyUtils.copyObject(category, CategoryDTO.class);
     }
 }

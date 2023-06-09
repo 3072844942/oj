@@ -79,7 +79,7 @@ public class UserInfo {
     /**
      * 信息审核
      */
-    private EntityStateEnum status;
+    private EntityStateEnum state;
 
     /**
      * 创建时间
