@@ -124,6 +124,11 @@ public class ArticleService {
     }
 
     public ArticleDTO verifyOne(String id) {
+        // 需要写权限
+        if (!PermissionUtil.enableWrite("")) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
+
         return updateOneState(id, EntityStateEnum.PUBLIC);
     }
 

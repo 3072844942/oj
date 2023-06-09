@@ -32,17 +32,20 @@ public class CommentController extends BaseController {
         return ok(commentService.verify(commentId));
     }
 
+    @Operation(description = "添加评论")
     @PutMapping("add")
     public Object insertOne(@RequestBody CommentDTO commentDTO) {
         return ok(commentService.insertOne(commentDTO));
     }
 
+    @Operation(description = "删除评论")
     @DeleteMapping("delete/{commentId}")
     public Object deleteOne(@PathVariable String commentId) {
         commentService.deleteOne(commentId);
         return ok();
     }
 
+    @Operation(description = "批量删除评论")
     @DeleteMapping("delete/list")
     public Object deleteOne(@RequestBody List<String> ids) {
         commentService.delete(ids);

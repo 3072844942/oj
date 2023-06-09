@@ -12,8 +12,17 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum PermissionEnum {
+    /**
+     * 仅自己
+     */
     NONE(0, "无权限"),
+    /**
+     * 可读所有
+     */
     READ(1, "读全部"),
+    /**
+     * 可全部操作
+     */
     WRITE(2, "写全部")
     ;
     private final Integer code ;

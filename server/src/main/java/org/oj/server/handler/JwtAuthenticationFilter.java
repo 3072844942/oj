@@ -12,6 +12,7 @@ import org.oj.server.entity.UserAuth;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
+import org.oj.server.service.PermissionService;
 import org.oj.server.util.IpUtils;
 import org.oj.server.util.JwtUtil;
 import org.oj.server.util.StringUtils;
@@ -29,11 +30,6 @@ import java.util.Optional;
  */
 @Component
 public class JwtAuthenticationFilter implements HandlerInterceptor {
-    /**
-     * 权限集合
-     * url - permission
-     */
-    private static final Map<String, Permission> permissionMap = new HashMap<>();
     @Autowired
     private PermissionRepository permissionRepository;
     @Autowired
@@ -80,11 +76,11 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
 
         // 请求路由
         String uri = request.getRequestURI();
-        if (!permissionMap.containsKey(uri)) {
+        if (!PermissionService.permissionMap.containsKey(uri)) {
             throw new ErrorException(StatusCodeEnum.SYSTEM_ERROR);
         }
 
-        Permission permission = permissionMap.get(uri);
+        Permission permission = PermissionService.permissionMap.get(uri);
         // 允许匿名访问
         if (permission.getIsAnonymous()) {
             // 放行
@@ -97,14 +93,5 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
 
         // 进行授权
         return authorizationFilter.doFilterInternal(request, response, permission);
-    }
-
-    /**
-     * 预加载所有权限
-     */
-    @PostConstruct
-    private void init() {
-        List<Permission> all = permissionRepository.findAll();
-        all.forEach(permission -> permissionMap.put(permission.getUrl(), permission));
     }
 }

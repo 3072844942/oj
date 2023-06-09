@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
@@ -43,7 +45,7 @@ public class Permission {
     /**
      * 父权限id
      */
-    private Integer parentId;
+    private String parentId;
 
     /**
      * 是否匿名访问
@@ -53,10 +55,12 @@ public class Permission {
     /**
      * 创建时间
      */
+    @CreatedDate
     private Long createTime;
 
     /**
      * 修改时间
      */
+    @LastModifiedDate
     private Long updateTime;
 }

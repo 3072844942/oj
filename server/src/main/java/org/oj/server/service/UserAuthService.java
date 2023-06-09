@@ -16,7 +16,9 @@ import org.oj.server.util.JwtUtil;
 import org.oj.server.util.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -30,6 +32,8 @@ public class UserAuthService {
     private UserAuthRepository userAuthRepository;
     @Autowired
     private UserInfoRepository userInfoRepository;
+    @Autowired
+    private MongoTemplate mongoTemplate;
     @Autowired
     private RedisService redisService;
     @Autowired
@@ -77,6 +81,7 @@ public class UserAuthService {
         mqService.email(username, code, 5L);
     }
 
+    @Transactional
     public String register(UsernamePassword usernamePassword) {
         String username = usernamePassword.getUsername();
         boolean checked = StringUtils.checkEmail(username);

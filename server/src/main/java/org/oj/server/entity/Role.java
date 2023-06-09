@@ -39,11 +39,6 @@ public class Role {
     private String name;
 
     /**
-     * 角色标签
-     */
-    private String roleLabel;
-
-    /**
      * 是否禁用
      */
     private EntityStateEnum state;

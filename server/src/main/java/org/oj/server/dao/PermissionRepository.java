@@ -11,4 +11,6 @@ import java.util.Optional;
  */
 public interface PermissionRepository extends MongoRepository<Permission, String> {
     Optional<Permission> findByUrl(String url);
+
+    boolean existsByUrl(String url);
 }

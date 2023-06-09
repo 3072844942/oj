@@ -37,6 +37,8 @@ public class UserController extends BaseController {
         return ok();
     }
 
+    @Operation(summary = "注册")
+    @PostMapping("register")
     public Object register(@RequestBody UsernamePassword usernamePassword) {
         return ok(userAuthService.register(usernamePassword));
     }
