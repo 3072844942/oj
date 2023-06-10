@@ -20,7 +20,8 @@ public enum StatusCodeEnum {
     DATA_EXIST(5, "数据已存在"),
     DATA_NOT_EXIST(6, "数据不存在"),
     LOGIN_ERROR(7, "登陆错误"),
-    PASSWORD_NOT_MATCHED(8, " 密码错误");
+    PASSWORD_NOT_MATCHED(8, " 密码错误"),
+    INDEX_OUT_OF_BOUND(9, "下标越界");
 
     /**
      * 状态码

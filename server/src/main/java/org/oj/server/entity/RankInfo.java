@@ -24,9 +24,14 @@ public class RankInfo {
     private String userId;
 
     /**
+     * 过题数
+     */
+    private Integer count;
+
+    /**
      * 罚时
      */
-    private String penalty;
+    private Integer penalty;
 
     /**
      * 题目状态

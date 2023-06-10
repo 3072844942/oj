@@ -1,8 +1,356 @@
 package org.oj.server.service;
 
+import org.oj.server.constant.HtmlConst;
+import org.oj.server.dao.ContestRepository;
+import org.oj.server.dao.ProblemRepository;
+import org.oj.server.dto.ConditionDTO;
+import org.oj.server.dto.ContestDTO;
+import org.oj.server.dto.Request;
+import org.oj.server.entity.*;
+import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.enums.StatusCodeEnum;
+import org.oj.server.exception.ErrorException;
+import org.oj.server.exception.WarnException;
+import org.oj.server.util.PermissionUtil;
+import org.oj.server.util.StringUtils;
+import org.oj.server.vo.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 /**
  * @author march
  * @since 2023/5/31 下午3:08
  */
+@Service
 public class ContestService {
+    @Autowired
+    private ContestRepository contestRepository;
+    @Autowired
+    private UserInfoService userInfoService;
+    @Autowired
+    private ProblemRepository problemRepository;
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    public ContestInfoVO findOne(String contestId) {
+        Contest contest = findById(contestId);
+
+        // 如果非公开
+        if (!PermissionUtil.enableRead(contest.getState(), contest.getUserId())) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
+
+        ContestInfoVO contestInfoVO = ContestInfoVO.of(contest);
+        contestInfoVO.setAuthor(userInfoService.findById(contest.getUserId()));
+        // (如果有权限 || 是自己的) ||  (是公开的， 且到时间)
+        // System.currentTimeMillis() 是毫秒
+        if (PermissionUtil.enableRead(EntityStateEnum.REVIEW, contest.getUserId()) || (System.currentTimeMillis() / 1000) >= contest.getStartTime()) {
+            // 设置题目
+            List<Problem> problems = problemRepository.findAllById(contest.getProblemIds());
+
+            contestInfoVO.setProblems(problems.stream().map(problem -> {
+                ProblemVO problemVO = ProblemVO.of(problem);
+                problemVO.setTags(problem.getTagIds().stream()
+                        .map(tagId -> TagVO.of(TagService.tagMap.get(tagId))).toList());
+                problemVO.setExamples(problem.getExamples().stream().map(ProblemExampleVO::of).toList());
+                return problemVO;
+            }).toList());
+        }
+
+        return contestInfoVO;
+    }
+
+    public PageVO<RankInfoVO> findOneRank(String contestId, ConditionDTO conditionDTO) {
+        WarnException checked = ConditionDTO.check(conditionDTO);
+        if (checked != null) {
+            throw checked;
+        }
+
+        Contest contest = findById(contestId);
+
+        // 如果未开始
+        if ((System.currentTimeMillis() / 1000) < contest.getStartTime()) {
+            throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
+        }
+
+        // 根据过题数 || 罚时排序
+        List<RankInfo> list = contest.getRank().values().stream().sorted((a, b) -> {
+            // 优先根据过题数， 大的在前面
+            if (!a.getCount().equals(b.getCount())) return a.getCount().compareTo(b.getCount());
+            // 随后根据罚时 小的在前面
+            if (!a.getPenalty().equals(b.getPenalty())) return -a.getPenalty().compareTo(b.getPenalty());
+            // 避免 a == b 和 b == a
+            return a.getUserId().compareTo(b.getUserId());
+        }).toList();
+        long count = list.size();
+
+        int frontIndex = (conditionDTO.getCurrent() - 1) * conditionDTO.getSize();
+        if (frontIndex >= count) {
+            throw new ErrorException(StatusCodeEnum.INDEX_OUT_OF_BOUND);
+        }
+
+        return new PageVO<>(
+                list.subList(frontIndex, conditionDTO.getSize()).stream().map(rankInfo -> {
+                    RankInfoVO of = RankInfoVO.of(rankInfo);
+                    // 根据比赛的题目id顺序进行转换
+                    of.setProblemStates(contest.getProblemIds().stream()
+                            .map(id -> ProblemStateVO.of(rankInfo.getProblemStateMap().get(id))).toList());
+                    return of;
+                }).toList(),
+                count
+        );
+    }
+
+
+    private Contest findById(String contestId) {
+        Optional<Contest> byId = contestRepository.findById(contestId);
+        if (byId.isEmpty()) {
+            throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
+        }
+
+        return byId.get();
+    }
+
+    public PageVO<UserInfoVO> findOneUser(String contestId, ConditionDTO conditionDTO) {
+        WarnException checked = ConditionDTO.check(conditionDTO);
+        if (checked != null) {
+            throw checked;
+        }
+
+        Contest contest = findById(contestId);
+
+        int frontIndex = (conditionDTO.getCurrent() - 1) * conditionDTO.getSize();
+        if (frontIndex >= contest.getUserIds().size()) {
+            throw new ErrorException(StatusCodeEnum.INDEX_OUT_OF_BOUND);
+        }
+
+        List<String> ids = contest.getUserIds().subList(frontIndex, conditionDTO.getSize());
+
+        return new PageVO<>(
+                ids.stream().map(id -> userInfoService.findById(id)).toList(),
+                (long) contest.getUserIds().size()
+        );
+    }
+
+    public PageVO<ContestProfileVO> find(ConditionDTO conditionDTO) {
+        WarnException checked = ConditionDTO.check(conditionDTO);
+        if (checked != null) {
+            throw checked;
+        }
+
+        // 查询条件
+        Query query = new Query();
+        // 有读写权限
+        if (PermissionUtil.enableRead(EntityStateEnum.DRAFT, "")) {
+            // 随意读
+            query.addCriteria(Criteria.where("state").is(EntityStateEnum.valueOf(conditionDTO.getState())));
+        } else {
+            EntityStateEnum state = EntityStateEnum.valueOf(conditionDTO.getState());
+            // 如果读的不是公开
+            if (!state.equals(EntityStateEnum.PUBLIC)) {
+                throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+            } else {
+                query.addCriteria(Criteria.where("state").is(state));
+            }
+        }
+
+        // 指定了作者
+        if (conditionDTO.getId() != null) {
+            query.addCriteria(Criteria.where("userId").is(conditionDTO.getId()));
+        }
+        // 匹配关键字
+        String keywords = conditionDTO.getKeywords();
+        if (keywords != null) {
+            query.addCriteria(new Criteria().orOperator(
+                    Criteria.where("title").regex(keywords),
+                    Criteria.where("content").regex(keywords),
+                    Criteria.where("categoryId").is(keywords)
+            ));
+        }
+        if (conditionDTO.getTags() != null && conditionDTO.getTags().size() != 0) {
+            query.addCriteria(Criteria.where("tagIds").in(conditionDTO.getTags()));
+        }
+
+        long count = mongoTemplate.count(query, Contest.class);
+
+        query.skip((conditionDTO.getCurrent() - 1L) * conditionDTO.getSize()).limit(conditionDTO.getSize());
+        List<Contest> all = mongoTemplate.find(query, Contest.class);
+
+        return new PageVO<>(
+                // 设置高亮
+                parse(all.stream().peek(contest -> {
+                    if (keywords != null) {
+                        contest.setTitle(contest.getTitle().replaceAll(keywords, HtmlConst.PRE_TAG + keywords + HtmlConst.POST_TAG));
+                        contest.setContent(StringUtils.subKeywords(contest.getContent(), keywords));
+                    }
+                }).toList()),
+                count
+        );
+    }
+
+    /**
+     * 转换数据对象
+     *
+     * @param all 数据库比赛列表
+     * @return 简略比赛信息列表
+     */
+    private List<ContestProfileVO> parse(List<Contest> all) {
+        List<String> userIds = all.stream().map(Contest::getUserId).toList();
+        Map<String, UserInfo> infoMap = userInfoService.findAllById(userIds);
+
+        return all.stream()
+                .map(a -> {
+                    ContestProfileVO contestProfileVO = ContestProfileVO.of(a);
+                    contestProfileVO.setAuthor(userInfoService.findById(a.getUserId()));
+                    if (Request.user.get() != null) {
+                        contestProfileVO.setIsSignUp(a.getUserIds().contains(Request.user.get().getId()));
+                    }
+                    return contestProfileVO;
+                })
+                .toList();
+    }
+
+    public ContestDTO updateOne(ContestDTO contestDTO) {
+        WarnException checked = ContestDTO.check(contestDTO);
+        if (checked != null) {
+            throw checked;
+        }
+        // id为空
+        if (StringUtils.isEmpty(contestDTO.getId())) {
+            throw new WarnException(StatusCodeEnum.FAILED_PRECONDITION);
+        }
+        Optional<Contest> byId = contestRepository.findById(contestDTO.getId());
+        // 数据不存在
+        if (byId.isEmpty()) {
+            throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
+        }
+        // 不是自己的， 或者没有写权限
+        if (!PermissionUtil.enableWrite(byId.get().getUserId())) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
+
+        Contest contest = Contest.of(contestDTO);
+        // 重置为草稿
+        contest.setState(EntityStateEnum.DRAFT);
+
+        // 保存
+        contest = contestRepository.save(contest);
+        return ContestDTO.of(contest);
+    }
+
+    public ContestDTO publishOne(String contestId) {
+        return updateOneState(contestId, EntityStateEnum.REVIEW);
+    }
+
+    /**
+     * 更新比赛状态
+     *
+     * @param id    比赛id
+     * @param state 状态
+     * @return
+     */
+    private ContestDTO updateOneState(String id, EntityStateEnum state) {
+        Contest contest = findById(id);
+
+        // 需要写权限
+        if (!PermissionUtil.enableWrite(contest.getUserId())) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
+
+        contest.setState(state);
+        contest = contestRepository.save(contest);
+
+        return ContestDTO.of(contest);
+    }
+
+    public ContestDTO hideOne(String contestId) {
+        return updateOneState(contestId, EntityStateEnum.DRAFT);
+    }
+
+    public ContestDTO verifyOne(String contestId) {
+        // 需要写权限
+        if (!PermissionUtil.enableWrite("")) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
+
+        return updateOneState(contestId, EntityStateEnum.PUBLIC);
+    }
+
+    public ContestDTO recycleOne(String contestId) {
+        return updateOneState(contestId, EntityStateEnum.DELETE);
+    }
+
+    public void deleteOne(String contestId) {
+        Contest contest = findById(contestId);
+
+        // 不是自己的， 或没有写权限
+        if (!PermissionUtil.enableWrite(contest.getUserId())) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
+
+        contestRepository.deleteById(contestId);
+    }
+
+    public void delete(List<String> ids) {
+        // 批量删除需要写权限
+        if (!PermissionUtil.enableWrite("")) {
+            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+        }
+
+        contestRepository.deleteAllById(ids);
+    }
+
+    public ContestDTO insertOne(ContestDTO contestDTO) {
+        WarnException checked = ContestDTO.check(contestDTO);
+        if (checked != null) {
+            throw checked;
+        }
+        // id不为空
+        if (StringUtils.isPresent(contestDTO.getId())) {
+            // 数据已存在
+            if (contestRepository.existsById(contestDTO.getId())) {
+                throw new ErrorException(StatusCodeEnum.DATA_EXIST);
+            }
+            // 不存在则置空
+            contestDTO.setId(null);
+        }
+
+        Contest contest = Contest.of(contestDTO);
+        // 设置作者
+        if (Request.user.get() != null) {
+            contest.setUserId(Request.user.get().getId());
+        }
+        contest.setState(EntityStateEnum.DRAFT);
+
+        contest = contestRepository.insert(contest);
+
+        return ContestDTO.of(contest);
+    }
+
+    public ContestProfileVO signUp(String contestId) {
+        UserAuth userAuth = Request.user.get();
+        if (userAuth == null) {
+            throw new ErrorException(StatusCodeEnum.LOGIN_ERROR);
+        }
+
+        Contest contest = findById(contestId);
+        if (contest.getUserIds().contains(userAuth.getId())) {
+            throw new ErrorException(StatusCodeEnum.DATA_EXIST);
+        }
+
+        contest.getUserIds().add(userAuth.getId());
+        contest = contestRepository.save(contest);
+
+        ContestProfileVO contestProfileVO = ContestProfileVO.of(contest);
+        contestProfileVO.setAuthor(userInfoService.findById(contest.getUserId()));
+        contestProfileVO.setIsSignUp(true);
+        return contestProfileVO;
+    }
 }

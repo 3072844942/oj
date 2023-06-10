@@ -1,33 +1,29 @@
-package org.oj.server.entity;
+package org.oj.server.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.entity.Problem;
+import org.oj.server.entity.ProblemExample;
 import org.oj.server.enums.EntityStateEnum;
-import org.springframework.data.annotation.CreatedDate;
+import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
 /**
- * 题目
- *
  * @author march
- * @since 2023/5/31 上午10:28
+ * @since 2023/6/9 下午3:33
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@Document("problem")
-public class Problem {
+@AllArgsConstructor
+public class ProblemVO {
     /**
      * 题目ID
      */
-    @Id
     private String id;
 
     /**
@@ -43,7 +39,7 @@ public class Problem {
     /**
      * 题目标签列表
      */
-    private List<String> tagIds;
+    private List<TagVO> tags;
 
     /**
      * 题目描述
@@ -63,7 +59,7 @@ public class Problem {
     /**
      * 题目样例
      */
-    private List<ProblemExample> examples;
+    private List<ProblemExampleVO> examples;
 
     /**
      * 提示
@@ -81,34 +77,23 @@ public class Problem {
     private Integer memoryRequire;
 
     /**
-     * 测试数据地址
-     */
-    private String address;
-
-    /**
-     * 是否特判
-     */
-    private Boolean isSpecial;
-
-    /**
-     * 特判程序地址
-     */
-    private String specialAddress;
-
-    /**
      * 状态
      */
-    private EntityStateEnum state;
+    private Integer state;
 
     /**
      * 题目创建时间
      */
-    @CreatedDate
     private Long createTime;
 
     /**
      * 更新时间
      */
-    @LastModifiedDate
     private Long updateTime;
+
+    public static ProblemVO of(Problem problem) {
+        ProblemVO problemVO = BeanCopyUtils.copyObject(problem, ProblemVO.class);
+        problemVO.setState(problem.getState().getCode());
+        return problemVO;
+    }
 }

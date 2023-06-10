@@ -1,36 +1,32 @@
-package org.oj.server.entity;
+package org.oj.server.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.oj.server.dto.ContestDTO;
+import org.oj.server.entity.Contest;
+import org.oj.server.entity.RankInfo;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * 比赛
- *
  * @author march
- * @since 2023/5/31 上午10:28
+ * @since 2023/6/9 下午3:30
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@Document("contest")
-public class Contest {
+@AllArgsConstructor
+public class ContestInfoVO {
     /**
      * 比赛ID
      */
-    @Id
     private String id;
 
     /**
@@ -41,7 +37,7 @@ public class Contest {
     /**
      * 比赛创建人
      */
-    private String userId;
+    private UserInfoVO author;
 
     /**
      * 比赛描述
@@ -51,23 +47,12 @@ public class Contest {
     /**
      * 比赛题目集
      */
-    private List<String> problemIds;
-
-    /**
-     * 加入的用户集合
-     */
-    private List<String> userIds;
-
-    /**
-     * 排名
-     * userid - info
-     */
-    private Map<String, RankInfo> rank;
+    private List<ProblemVO> problems;
 
     /**
      * 状态
      */
-    private EntityStateEnum state;
+    private Integer state;
 
     /**
      * 比赛开始时间
@@ -82,18 +67,16 @@ public class Contest {
     /**
      * 创建时间
      */
-    @CreatedDate
     private Long createTime;
 
     /**
      * 更新时间
      */
-    @LastModifiedDate
     private Long updateTime;
 
-    public static Contest of(ContestDTO contestDTO) {
-        Contest contest = BeanCopyUtils.copyObject(contestDTO, Contest.class);
-        contest.setState(EntityStateEnum.valueOf(contestDTO.getState()));
-        return contest;
+    public static ContestInfoVO of(Contest contest) {
+        ContestInfoVO contestInfoVO = BeanCopyUtils.copyObject(contest, ContestInfoVO.class);
+        contestInfoVO.setState(contest.getState().getCode());
+        return contestInfoVO;
     }
 }

@@ -72,8 +72,6 @@ public class PermissionService {
             // 初始化权限
             log.info("path: " + uri + "\t methods: " + methodsCondition.getMethods());
 
-            // 存在则跳过
-            if (permissionRepository.existsByUrl(uri)) continue;
             // 跳过swagger文档
             if (uri.contains("/v3") || uri.contains("swagger")) continue;
 
@@ -88,7 +86,7 @@ public class PermissionService {
                     method.equals("GET") || white.contains(uri),
                     0L, 0L
             );
-            permissionRepository.insert(permission);
+            permissionRepository.save(permission);
 
             // 如果前缀不存在
             if (!permissionRepository.existsByUrl(profileUri)) {
@@ -101,7 +99,7 @@ public class PermissionService {
                         true,
                         0L, 0L
                 );
-                permissionRepository.insert(p);
+                permissionRepository.save(p);
             }
         }
 

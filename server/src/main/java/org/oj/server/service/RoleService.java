@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author march
@@ -44,8 +43,7 @@ public class RoleService {
                 all,
                 0L, 0L
         );
-        if (!roleRepository.existsById(root.getId()))
-            roleRepository.insert(root);
+        roleRepository.save(root);
 
         Role admin = new Role(
                 "admin",
@@ -55,8 +53,7 @@ public class RoleService {
                 all,
                 0L, 0L
         );
-        if (!roleRepository.existsById(admin.getId()))
-            roleRepository.insert(admin);
+        roleRepository.save(admin);
 
 
         Map<String, PermissionEnum> map = new HashMap<>();
@@ -76,7 +73,6 @@ public class RoleService {
                 map,
                 0L, 0L
         );
-        if (!roleRepository.existsById(user.getId()))
-            roleRepository.insert(user);
+        roleRepository.save(user);
     }
 }

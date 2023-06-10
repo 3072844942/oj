@@ -1,5 +1,7 @@
 package org.oj.server.util;
 
+import org.oj.server.constant.HtmlConst;
+
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,5 +58,29 @@ public class StringUtils {
             str.append(random.nextInt(10));
         }
         return str.toString();
+    }
+
+    /**
+     * 截取关键字周围片段
+     * @param content 内容
+     * @param keywords 关键字
+     * @return 长度不超过200
+     */
+    public static String subKeywords(String content, String keywords) {
+        int index = content.indexOf(keywords);
+        if (index != -1) {
+            // 获取关键词前面的文字
+            int preIndex = index > 25 ? index - 25 : 0;
+            String preText = content.substring(preIndex, index);
+            // 获取关键词到后面的文字
+            int last = index + keywords.length();
+            int postLength = content.length() - last;
+            int postIndex = postLength > 175 ? last + 175 : last + postLength;
+            String postText = content.substring(index, postIndex);
+            // 文章内容高亮
+            return  (preText + postText).replaceAll(keywords, HtmlConst.PRE_TAG + keywords + HtmlConst.POST_TAG);
+        } else {
+            return content;
+        }
     }
 }

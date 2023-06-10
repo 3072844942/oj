@@ -218,11 +218,19 @@ public class ArticleService {
 
         // 查询条件
         Query query = new Query();
-        // 如果是自己的 || 有读写权限
-        if (PermissionUtil.enableRead(EntityStateEnum.DRAFT, conditionDTO.getId())) {
+        // 有读写权限
+        if (PermissionUtil.enableRead(EntityStateEnum.DRAFT, "")) {
+            // 随意读
             query.addCriteria(Criteria.where("state").is(EntityStateEnum.valueOf(conditionDTO.getState())));
         } else {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+            EntityStateEnum state = EntityStateEnum.valueOf(conditionDTO.getState());
+            // 如果读的不是公开
+            if (!state.equals(EntityStateEnum.PUBLIC)) {
+                throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
+            }
+            else {
+                query.addCriteria(Criteria.where("state").is(state));
+            }
         }
 
         // 指定了作者
@@ -252,19 +260,10 @@ public class ArticleService {
                 parse(all.stream().peek(article -> {
                     if (keywords != null) {
                         article.setTitle(article.getTitle().replaceAll(keywords, HtmlConst.PRE_TAG + keywords + HtmlConst.POST_TAG));
+                        // 多次一举， 因为article要修改的是summary
                         int index = article.getContent().indexOf(keywords);
                         if (index != -1) {
-                            // 获取关键词前面的文字
-                            int preIndex = index > 25 ? index - 25 : 0;
-                            String preText = article.getContent().substring(preIndex, index);
-                            // 获取关键词到后面的文字
-                            int last = index + keywords.length();
-                            int postLength = article.getContent().length() - last;
-                            int postIndex = postLength > 175 ? last + 175 : last + postLength;
-                            String postText = article.getContent().substring(index, postIndex);
-                            // 文章内容高亮
-                            String articleContent = (preText + postText).replaceAll(keywords, HtmlConst.PRE_TAG + keywords + HtmlConst.POST_TAG);
-                            article.setSummary(articleContent);
+                            article.setSummary(StringUtils.subKeywords(article.getContent(), keywords));
                         }
                     }
                 }).toList()),
@@ -272,6 +271,11 @@ public class ArticleService {
         );
     }
 
+    /**
+     * 转换数据对象
+     * @param all
+     * @return
+     */
     private List<ArticleSearchDTO> parse(List<Article> all) {
         List<String> userIds = all.stream().map(Article::getUserId).toList();
         Map<String, UserInfo> infoMap = userInfoService.findAllById(userIds);
