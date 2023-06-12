@@ -6,6 +6,7 @@ import org.oj.server.entity.Article;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.exception.WarnException;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.StringUtils;
 
 import java.util.List;
 
@@ -86,10 +87,14 @@ public class ArticleDTO {
     /**
      * 检查合法性
      * @param articleDTO
-     * @return 错误， 或者null
      */
-    public static WarnException check(ArticleDTO articleDTO) {
-        return null;
+    public static void check(ArticleDTO articleDTO) {
+        if (!StringUtils.isSpecifiedLength(articleDTO.getTitle(), 0, 20)) {
+            throw new WarnException("标题长度超限");
+        }
+        if (!StringUtils.isSpecifiedLength(articleDTO.getSummary(), 0, 200)) {
+            throw new WarnException("摘要长度超限");
+        }
     }
 
     public static ArticleDTO of(Article article) {

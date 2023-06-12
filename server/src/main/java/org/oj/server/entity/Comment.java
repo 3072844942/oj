@@ -8,6 +8,7 @@ import org.oj.server.dto.CommentDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
 import org.oj.server.util.SensitiveUtils;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -65,6 +66,7 @@ public class Comment {
     /**
      * 创建时间
      */
+    @CreatedDate
     private Long createTime;
 
     public static Comment of(CommentDTO commentDTO) {

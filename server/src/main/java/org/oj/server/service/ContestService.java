@@ -48,7 +48,7 @@ public class ContestService {
         }
 
         ContestInfoVO contestInfoVO = ContestInfoVO.of(contest);
-        contestInfoVO.setAuthor(userInfoService.findById(contest.getUserId()));
+        contestInfoVO.setAuthor(UserProfileVO.of(userInfoService.findById(contest.getUserId())));
         // (如果有权限 || 是自己的) ||  (是公开的， 且到时间)
         // System.currentTimeMillis() 是毫秒
         if (PermissionUtil.enableRead(EntityStateEnum.REVIEW, contest.getUserId()) || (System.currentTimeMillis() / 1000) >= contest.getStartTime()) {
@@ -68,10 +68,7 @@ public class ContestService {
     }
 
     public PageVO<RankInfoVO> findOneRank(String contestId, ConditionDTO conditionDTO) {
-        WarnException checked = ConditionDTO.check(conditionDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        ConditionDTO.check(conditionDTO);
 
         Contest contest = findById(contestId);
 
@@ -119,10 +116,7 @@ public class ContestService {
     }
 
     public PageVO<UserInfoVO> findOneUser(String contestId, ConditionDTO conditionDTO) {
-        WarnException checked = ConditionDTO.check(conditionDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        ConditionDTO.check(conditionDTO);
 
         Contest contest = findById(contestId);
 
@@ -140,10 +134,7 @@ public class ContestService {
     }
 
     public PageVO<ContestProfileVO> find(ConditionDTO conditionDTO) {
-        WarnException checked = ConditionDTO.check(conditionDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        ConditionDTO.check(conditionDTO);
 
         // 查询条件
         Query query = new Query();
@@ -208,7 +199,7 @@ public class ContestService {
         return all.stream()
                 .map(a -> {
                     ContestProfileVO contestProfileVO = ContestProfileVO.of(a);
-                    contestProfileVO.setAuthor(userInfoService.findById(a.getUserId()));
+                    contestProfileVO.setAuthor(UserProfileVO.of(userInfoService.findById(a.getUserId())));
                     if (Request.user.get() != null) {
                         contestProfileVO.setIsSignUp(a.getUserIds().contains(Request.user.get().getId()));
                     }
@@ -218,10 +209,8 @@ public class ContestService {
     }
 
     public ContestDTO updateOne(ContestDTO contestDTO) {
-        WarnException checked = ContestDTO.check(contestDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        ContestDTO.check(contestDTO);
+
         // id为空
         if (StringUtils.isEmpty(contestDTO.getId())) {
             throw new WarnException(StatusCodeEnum.FAILED_PRECONDITION);
@@ -308,10 +297,8 @@ public class ContestService {
     }
 
     public ContestDTO insertOne(ContestDTO contestDTO) {
-        WarnException checked = ContestDTO.check(contestDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        ContestDTO.check(contestDTO);
+
         // id不为空
         if (StringUtils.isPresent(contestDTO.getId())) {
             // 数据已存在
@@ -349,7 +336,7 @@ public class ContestService {
         contest = contestRepository.save(contest);
 
         ContestProfileVO contestProfileVO = ContestProfileVO.of(contest);
-        contestProfileVO.setAuthor(userInfoService.findById(contest.getUserId()));
+        contestProfileVO.setAuthor(UserProfileVO.of(userInfoService.findById(contest.getUserId())));
         contestProfileVO.setIsSignUp(true);
         return contestProfileVO;
     }

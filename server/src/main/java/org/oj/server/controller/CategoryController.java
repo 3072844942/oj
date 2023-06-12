@@ -27,6 +27,7 @@ public class CategoryController extends BaseController {
         return categoryService.find(conditionDTO);
     }
 
+    @Operation(summary = "更新分类")
     @PatchMapping("update")
     public Object updateOne(@RequestBody CategoryDTO categoryDTO) {
         return ok(categoryService.updateOne(categoryDTO));

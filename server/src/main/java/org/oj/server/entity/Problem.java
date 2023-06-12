@@ -36,11 +36,6 @@ public class Problem {
     private String title;
 
     /**
-     * 题目等级
-     */
-    private String grade;
-
-    /**
      * 题目标签列表
      */
     private List<String> tagIds;

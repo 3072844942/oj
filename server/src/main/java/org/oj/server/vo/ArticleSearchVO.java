@@ -22,7 +22,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "首页文章列表信息")
-public class ArticleSearchDTO {
+public class ArticleSearchVO {
 
     /**
      * 文章状态
@@ -80,8 +80,8 @@ public class ArticleSearchDTO {
     @Schema(description = "分类id")
     private CategoryVO category;
 
-    public static ArticleSearchDTO of(Article article) {
-        ArticleSearchDTO articleHomeVO = BeanCopyUtils.copyObject(article, ArticleSearchDTO.class);
+    public static ArticleSearchVO of(Article article) {
+        ArticleSearchVO articleHomeVO = BeanCopyUtils.copyObject(article, ArticleSearchVO.class);
         articleHomeVO.setState(article.getState().getCode());
         return articleHomeVO;
     }

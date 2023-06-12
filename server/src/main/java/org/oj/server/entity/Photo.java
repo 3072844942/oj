@@ -5,7 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.oj.server.enums.EntityStateEnum;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 
@@ -19,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(value = "photo")
+@Document("photo")
 public class Photo {
 
     /**
@@ -56,10 +58,12 @@ public class Photo {
     /**
      * 创建时间
      */
+    @CreatedDate
     private Long createTime;
 
     /**
      * 修改时间
      */
+    @LastModifiedDate
     private Long updateTime;
 }

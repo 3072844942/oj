@@ -42,10 +42,8 @@ public class ArticleService {
     private MongoTemplate mongoTemplate;
 
     public ArticleDTO insertOne(ArticleDTO articleDTO) {
-        WarnException checked = ArticleDTO.check(articleDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        ArticleDTO.check(articleDTO);
+
         // id不为空
         if (StringUtils.isPresent(articleDTO.getId())) {
             // 数据已存在
@@ -73,10 +71,8 @@ public class ArticleService {
     }
 
     public ArticleDTO updateOne(ArticleDTO articleDTO) {
-        WarnException checked = ArticleDTO.check(articleDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        ArticleDTO.check(articleDTO);
+
         // id为空
         if (StringUtils.isEmpty(articleDTO.getId())) {
             throw new WarnException(StatusCodeEnum.FAILED_PRECONDITION);
@@ -210,11 +206,8 @@ public class ArticleService {
         return ArticleDTO.of(article);
     }
 
-    public PageVO<ArticleSearchDTO> find(ConditionDTO conditionDTO) {
-        WarnException checked = ConditionDTO.check(conditionDTO);
-        if (checked != null) {
-            throw checked;
-        }
+    public PageVO<ArticleSearchVO> find(ConditionDTO conditionDTO) {
+        ConditionDTO.check(conditionDTO);
 
         // 查询条件
         Query query = new Query();
@@ -276,13 +269,13 @@ public class ArticleService {
      * @param all
      * @return
      */
-    private List<ArticleSearchDTO> parse(List<Article> all) {
+    private List<ArticleSearchVO> parse(List<Article> all) {
         List<String> userIds = all.stream().map(Article::getUserId).toList();
         Map<String, UserInfo> infoMap = userInfoService.findAllById(userIds);
 
         return all.stream()
                 .map(a -> {
-                    ArticleSearchDTO articleSearchDTO = ArticleSearchDTO.of(a);
+                    ArticleSearchVO articleSearchDTO = ArticleSearchVO.of(a);
 
                     articleSearchDTO.setAuthor(UserProfileVO.of(infoMap.get(a.getUserId())));
                     articleSearchDTO.setTags(

@@ -87,10 +87,8 @@ public class CommentService {
     }
 
     public CommentVO insertOne(CommentDTO commentDTO) {
-        WarnException checked = CommentDTO.check(commentDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        CommentDTO.check(commentDTO);
+
         // id不为空
         if (StringUtils.isPresent(commentDTO.getId())) {
             // 数据已存在

@@ -7,6 +7,7 @@ import org.oj.server.entity.RankInfo;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.exception.WarnException;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.StringUtils;
 import org.springframework.data.annotation.Id;
 
 import java.util.List;
@@ -72,8 +73,13 @@ public class ContestDTO {
     @Schema(description = "结束时间")
     private Long endTime;
 
-    public static WarnException check(ContestDTO contestDTO) {
-        return null;
+    public static void check(ContestDTO contestDTO) {
+        if (!StringUtils.isSpecifiedLength(contestDTO.getTitle(), 0, 20)) {
+            throw new WarnException("标题长度超限");
+        }
+        if (contestDTO.getStartTime() >= contestDTO.getEndTime()) {
+            throw new WarnException("比赛时间错误");
+        }
     }
 
     public static ContestDTO of(Contest contest) {

@@ -1,6 +1,9 @@
 package org.oj.server.dto;
 
 import lombok.*;
+import org.oj.server.entity.Faculty;
+import org.oj.server.exception.WarnException;
+import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -10,7 +13,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * @author march
  * @since 2023/5/31 上午10:05
  */
-@Getter
+@Data
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class FacultyDTO {
     /**
@@ -27,4 +32,12 @@ public class FacultyDTO {
      * 学院描述
      */
     private String desc;
+
+    public static WarnException check(FacultyDTO facultyDTO) {
+        return null;
+    }
+
+    public static FacultyDTO of(Faculty faculty) {
+        return BeanCopyUtils.copyObject(faculty, FacultyDTO.class);
+    }
 }

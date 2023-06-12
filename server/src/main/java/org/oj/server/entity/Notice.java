@@ -4,8 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.dto.NoticeDTO;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.util.BeanCopyUtils;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
@@ -55,15 +59,23 @@ public class Notice {
     /**
      * 文章状态
      */
-    private EntityStateEnum status;
+    private EntityStateEnum state;
 
     /**
      * 创建时间
      */
+    @CreatedDate
     private Long createTime;
 
     /**
      * 修改时间
      */
+    @LastModifiedDate
     private Long updateTime;
+
+    public static Notice of(NoticeDTO noticeDTO) {
+        Notice notice = BeanCopyUtils.copyObject(noticeDTO, Notice.class);
+        notice.setState(EntityStateEnum.valueOf(noticeDTO.getState()));
+        return notice;
+    }
 }

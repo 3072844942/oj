@@ -4,6 +4,7 @@ import org.oj.server.dao.UserInfoRepository;
 import org.oj.server.entity.UserInfo;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
+import org.oj.server.vo.FacultyVO;
 import org.oj.server.vo.UserInfoVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,9 @@ public class UserInfoService {
             throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
         }
 
-        return UserInfoVO.of(byId.get());
+        UserInfo userInfo = byId.get();
+        UserInfoVO of = UserInfoVO.of(userInfo);
+        of.setFaculty(FacultyVO.of(FacultyService.facultyMap.get(userInfo.getFacultyId())));
+        return of;
     }
 }

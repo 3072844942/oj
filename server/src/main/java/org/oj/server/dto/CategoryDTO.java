@@ -6,6 +6,7 @@ import org.oj.server.entity.Category;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -34,8 +35,10 @@ public class CategoryDTO {
     @Schema(description = "标题")
     private String title;
 
-    public static WarnException check(CategoryDTO categoryDTO) {
-        return null;
+    public static void check(CategoryDTO categoryDTO) {
+        if (!StringUtils.isSpecifiedLength(categoryDTO.getTitle(), 0, 20)) {
+            throw new WarnException("标题长度超限");
+        }
     }
 
     public static CategoryDTO of(Category category) {

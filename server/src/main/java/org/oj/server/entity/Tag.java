@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.dto.TagDTO;
+import org.oj.server.util.BeanCopyUtils;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -15,11 +18,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * @date 2021/07/29
  * @since 2020-05-18
  */
-@Document("tag")
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Document("tag")
 public class Tag {
 
     /**
@@ -36,5 +39,10 @@ public class Tag {
     /**
      * 创建时间
      */
+    @CreatedDate
     private Long createTime;
+
+    public static Tag of(TagDTO tagDTO) {
+        return BeanCopyUtils.copyObject(tagDTO, Tag.class);
+    }
 }

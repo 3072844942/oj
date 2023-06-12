@@ -83,4 +83,16 @@ public class StringUtils {
             return content;
         }
     }
+
+
+    /**
+     * 检查字符串是否符合长度
+     * @param str 字符串
+     * @param l 最小长度
+     * @param r 最大长度
+     * @return 是否符合
+     */
+    public static boolean isSpecifiedLength(String str, int l, int r) {
+        return str.length() >= l && str.length() <= r;
+    }
 }

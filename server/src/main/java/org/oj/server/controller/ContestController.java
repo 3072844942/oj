@@ -1,6 +1,7 @@
 package org.oj.server.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.oj.server.dto.ContestDTO;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.service.ContestService;
@@ -15,6 +16,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("contest")
+@Tag(name = "比赛接口")
 public class ContestController extends BaseController {
     @Autowired
     private ContestService contestService;

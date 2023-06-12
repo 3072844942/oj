@@ -36,10 +36,7 @@ public class CategoryService {
     private MongoTemplate mongoTemplate;
 
     public CategoryVO insertOne(CategoryDTO categoryDTO) {
-        WarnException checked = CategoryDTO.check(categoryDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        CategoryDTO.check(categoryDTO);
 
         // id不为空
         if (StringUtils.isPresent(categoryDTO.getId())) {
@@ -79,10 +76,7 @@ public class CategoryService {
     }
 
     public PageVO<CategoryVO> find(ConditionDTO conditionDTO) {
-        WarnException checked = ConditionDTO.check(conditionDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        ConditionDTO.check(conditionDTO);
 
         // 查询条件
         Query query = new Query();
@@ -91,7 +85,7 @@ public class CategoryService {
             query.addCriteria(Criteria.where("title").regex(keywords));
         }
 
-        long count = mongoTemplate.count(query, Article.class);
+        long count = mongoTemplate.count(query, Category.class);
 
         query.skip((conditionDTO.getCurrent() - 1L) * conditionDTO.getSize()).limit(conditionDTO.getSize());
         List<Category> categories = mongoTemplate.find(query, Category.class);
@@ -102,10 +96,7 @@ public class CategoryService {
     }
 
     public CategoryDTO updateOne(CategoryDTO categoryDTO) {
-        WarnException checked = CategoryDTO.check(categoryDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        CategoryDTO.check(categoryDTO);
 
         // 数据已存在
         if (!categoryRepository.existsById(categoryDTO.getId())) {

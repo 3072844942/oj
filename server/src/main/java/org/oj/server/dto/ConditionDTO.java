@@ -61,13 +61,12 @@ public class ConditionDTO {
     @Schema(description = "查找状态")
     private Integer state;
 
-    public static WarnException check(ConditionDTO conditionDTO) {
+    public static void check(ConditionDTO conditionDTO) {
         if (conditionDTO.current < 0) {
-            return new WarnException("页码超限");
+            throw  new WarnException("页码超限");
         }
         if (conditionDTO.size < 0 || conditionDTO.size > 100) {
-            return new WarnException("请求数量过大");
+            throw  new WarnException("请求数量过大");
         }
-        return null;
     }
 }

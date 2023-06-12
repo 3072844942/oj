@@ -75,7 +75,7 @@ public class UserInfoVO {
     private String name;
 
     /**
-     * 学院id
+     * 学院
      */
     @Schema(description = "学院")
     private FacultyVO faculty;

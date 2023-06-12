@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.entity.Faculty;
+import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.Id;
 
 /**
@@ -40,4 +42,8 @@ public class FacultyVO {
      */
     @Schema(description = "创建时间")
     private Long createTime;
+
+    public static FacultyVO of(Faculty faculty) {
+        return BeanCopyUtils.copyObject(faculty, FacultyVO.class);
+    }
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.JudgeStateEnum;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -40,7 +41,7 @@ public class Record {
     /**
      * 比赛id
      */
-    private String cotestId;
+    private String contestId;
 
     /**
      * 提交代码
@@ -70,5 +71,6 @@ public class Record {
     /**
      * 创建时间
      */
+    @CreatedDate
     private Long createTime;
 }

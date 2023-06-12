@@ -1,7 +1,6 @@
 package org.oj.server.constant;
 
 /**
- * mqprefix常量
  * mq常量
  *
  * @author bin

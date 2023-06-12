@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.dto.FacultyDTO;
+import org.oj.server.util.BeanCopyUtils;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -38,5 +41,10 @@ public class Faculty {
     /**
      * 创建时间
      */
+    @CreatedDate
     private Long createTime;
+
+    public static Faculty of(FacultyDTO facultyDTO) {
+        return BeanCopyUtils.copyObject(facultyDTO, Faculty.class);
+    }
 }

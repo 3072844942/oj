@@ -8,13 +8,17 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * springSecurity
+ * 拦截器配置
  */
 @Configuration
 public class WebSecurityConfig implements WebMvcConfigurer {
     @Autowired
     private JwtAuthenticationFilter authenticationFilter;
 
+    /**
+     * 允许所有访问
+     * @param registry
+     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**").allowCredentials(true).allowedHeaders("*").allowedOriginPatterns("*").allowedMethods("*");
@@ -25,6 +29,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(authenticationFilter);
+        // 认证拦截器
+        registry.addInterceptor(authenticationFilter);
     }
 }

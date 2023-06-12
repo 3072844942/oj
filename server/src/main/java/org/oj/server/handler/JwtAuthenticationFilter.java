@@ -20,10 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * 认证过滤器
@@ -36,6 +33,8 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
     private UserAuthRepository userAuthRepository;
     @Autowired
     private AuthorizationFilter authorizationFilter;
+
+    private List<String> swaggerList = Arrays.asList("/v3", "/error", "/favicon.ico", "/webjars", "/doc.html");
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -76,6 +75,12 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
 
         // 请求路由
         String uri = request.getRequestURI();
+
+        // swagger允许访问
+        if (swaggerList.stream().anyMatch(uri::contains)) {
+            return  true;
+        }
+
         if (!PermissionService.permissionMap.containsKey(uri)) {
             throw new ErrorException(StatusCodeEnum.SYSTEM_ERROR);
         }
