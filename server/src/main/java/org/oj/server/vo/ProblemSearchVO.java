@@ -6,23 +6,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.oj.server.entity.Problem;
-import org.oj.server.entity.ProblemExample;
-import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
-import org.springframework.data.annotation.Id;
 
 import java.util.List;
 
 /**
  * @author march
- * @since 2023/6/9 下午3:33
+ * @since 2023/6/12 下午3:05
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "题目信息")
-public class ProblemVO {
+public class ProblemSearchVO {
     /**
      * 题目ID
      */
@@ -54,30 +51,6 @@ public class ProblemVO {
     private String context;
 
     /**
-     * 题目输入描述
-     */
-    @Schema(description = "输入描述")
-    private String inputContext;
-
-    /**
-     * 题目输出描述
-     */
-    @Schema(description = "输出描述")
-    private String outputContext;
-
-    /**
-     * 题目样例
-     */
-    @Schema(description = "样例")
-    private List<ProblemExampleVO> examples;
-
-    /**
-     * 提示
-     */
-    @Schema(description = "提示")
-    private String desc;
-
-    /**
      * 运行时间限制 ms
      */
     @Schema(description = "运行时间限制")
@@ -107,8 +80,8 @@ public class ProblemVO {
     @Schema(description = "更新时间")
     private Long updateTime;
 
-    public static ProblemVO of(Problem problem) {
-        ProblemVO problemVO = BeanCopyUtils.copyObject(problem, ProblemVO.class);
+    public static ProblemSearchVO of(Problem problem) {
+        ProblemSearchVO problemVO = BeanCopyUtils.copyObject(problem, ProblemSearchVO.class);
         problemVO.setState(problem.getState().getCode());
         return problemVO;
     }

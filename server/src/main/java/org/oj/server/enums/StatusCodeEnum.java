@@ -21,7 +21,13 @@ public enum StatusCodeEnum {
     DATA_NOT_EXIST(6, "数据不存在"),
     LOGIN_ERROR(7, "登陆错误"),
     PASSWORD_NOT_MATCHED(8, " 密码错误"),
-    INDEX_OUT_OF_BOUND(9, "下标越界");
+    INDEX_OUT_OF_BOUND(9, "下标越界"),
+    UNPACK_ERROR(10, "解压错误"),
+    MKDIR_ERROR(11, "创建文件夹错误"),
+    WRITE_ERROR(12, "写入文件错误"),
+    JUDGE_ERROR(13, "评测时异常"),
+    LANGUAGE_NOT_SUPPORT(14, "不支持该语言"),
+    COMPILE_ERROR(15, "编辑错误");
 
     /**
      * 状态码

@@ -5,9 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.security.MessageDigest;
 import java.util.Objects;
 
@@ -103,4 +101,30 @@ public class FileUtils {
         return accuracy;
     }
 
+    public static boolean exists(String inPath) {
+        File file = new File(inPath);
+        return file.exists();
+    }
+
+    public static String read(String path) throws IOException {
+        StringBuilder text = new StringBuilder();
+
+        FileReader in = new FileReader(path);
+        BufferedReader reader = new BufferedReader(in);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            text.append(line);
+        }
+        in.close();
+        reader.close();
+        return text.toString();
+    }
+
+    public static void write(String path, String content) throws IOException {
+        FileWriter out = new FileWriter(path);
+        BufferedWriter writer = new BufferedWriter(out);
+        writer.write(content);
+        out.close();
+        writer.close();
+    }
 }

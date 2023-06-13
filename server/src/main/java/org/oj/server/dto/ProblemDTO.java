@@ -1,7 +1,11 @@
 package org.oj.server.dto;
 
 import lombok.*;
+import org.oj.server.entity.Problem;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.exception.WarnException;
+import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,7 +17,9 @@ import java.util.List;
  * @author march
  * @since 2023/5/31 上午10:28
  */
-@Getter
+@Data
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class ProblemDTO {
     /**
@@ -27,29 +33,24 @@ public class ProblemDTO {
     private String title;
 
     /**
-     * 题目等级
-     */
-    private String grade;
-
-    /**
      * 题目标签列表
      */
-    private List<String> tags;
+    private List<String> tagIds;
 
     /**
      * 题目描述
      */
-    private String context;
+    private String content;
 
     /**
      * 题目输入描述
      */
-    private String inputContext;
+    private String inputContent;
 
     /**
      * 题目输出描述
      */
-    private String outputContext;
+    private String outputContent;
 
     /**
      * 题目样例
@@ -59,7 +60,7 @@ public class ProblemDTO {
     /**
      * 提示
      */
-    private String desc;
+    private String intro;
 
     /**
      * 运行时间限制 ms
@@ -90,4 +91,22 @@ public class ProblemDTO {
      * 状态
      */
     private Integer state;
+
+    public static void check(ProblemDTO problemDTO) {
+        if (!StringUtils.isSpecifiedLength(problemDTO.getTitle(), 0, 20)) {
+            throw new WarnException("标题长度超限");
+        }
+        if (!StringUtils.isSpecifiedLength(problemDTO.getAddress(), 0, 100)) {
+            throw new WarnException("题目测试数据错误");
+        }
+        if (problemDTO.getIsSpecial() && !StringUtils.isSpecifiedLength(problemDTO.getSpecialAddress(), 0, 100)) {
+            throw new WarnException("特判程序错误");
+        }
+    }
+
+    public static ProblemDTO of(Problem problem) {
+        ProblemDTO problemDTO = BeanCopyUtils.copyObject(problem, ProblemDTO.class);
+        problemDTO.setState(problem.getState().getCode());
+        return problemDTO;
+    }
 }

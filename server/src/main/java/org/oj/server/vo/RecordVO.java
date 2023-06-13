@@ -1,31 +1,25 @@
-package org.oj.server.entity;
+package org.oj.server.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.oj.server.enums.EntityStateEnum;
-import org.oj.server.enums.JudgeStateEnum;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.oj.server.entity.Record;
+import org.oj.server.util.BeanCopyUtils;
 
 /**
- * 评测记录
- *
  * @author march
- * @since 2023/5/31 上午10:34
+ * @since 2023/6/12 下午5:24
+ *
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@Document("record")
-public class Record {
+@AllArgsConstructor
+public class RecordVO {
     /**
      * id
      */
-    @Id
     private String id;
 
     /**
@@ -51,31 +45,32 @@ public class Record {
     /**
      * 评测结果
      */
-    private JudgeStateEnum result;
-
-    /**
-     * 更多信息
-     */
-    private String desc;
+    private Integer result;
 
     /**
      * 时间消耗
      */
-    private Long timeCost;
+    private Integer timeCost;
 
     /**
      * 内存消耗
      */
-    private Long memoryCost;
+    private Integer memoryCost;
 
     /**
      * 权限
      */
-    private EntityStateEnum state;
+    private Integer state;
 
     /**
      * 创建时间
      */
-    @CreatedDate
     private Long createTime;
+
+    public static RecordVO of(Record record) {
+        RecordVO recordVO = BeanCopyUtils.copyObject(record, RecordVO.class);
+        recordVO.setResult(record.getResult().getCode());
+        recordVO.setState(record.getState().getCode());
+        return recordVO;
+    }
 }

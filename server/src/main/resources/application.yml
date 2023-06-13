@@ -25,7 +25,6 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: org.oj.server
-# 这里闪黄是正常的。。
 knife4j:
   enable: true
   setting:

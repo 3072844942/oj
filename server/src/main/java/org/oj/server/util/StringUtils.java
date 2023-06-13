@@ -93,6 +93,10 @@ public class StringUtils {
      * @return 是否符合
      */
     public static boolean isSpecifiedLength(String str, int l, int r) {
-        return str.length() >= l && str.length() <= r;
+        return str != null && str.length() >= l && str.length() <= r;
+    }
+
+    public static boolean compile(String string, String stdOutput) {
+        return string.equalsIgnoreCase(stdOutput);
     }
 }

@@ -106,7 +106,7 @@ public class ContestService {
     }
 
 
-    private Contest findById(String contestId) {
+    public Contest findById(String contestId) {
         Optional<Contest> byId = contestRepository.findById(contestId);
         if (byId.isEmpty()) {
             throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);

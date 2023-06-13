@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.dto.ProblemDTO;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -31,6 +33,11 @@ public class Problem {
     private String id;
 
     /**
+     * 作者id
+     */
+    private String userId;
+
+    /**
      * 题目标题
      */
     private String title;
@@ -43,17 +50,17 @@ public class Problem {
     /**
      * 题目描述
      */
-    private String context;
+    private String content;
 
     /**
      * 题目输入描述
      */
-    private String inputContext;
+    private String inputContent;
 
     /**
      * 题目输出描述
      */
-    private String outputContext;
+    private String outputContent;
 
     /**
      * 题目样例
@@ -63,17 +70,17 @@ public class Problem {
     /**
      * 提示
      */
-    private String desc;
+    private String intro;
 
     /**
      * 运行时间限制 ms
      */
-    private Integer timeRequire;
+    private Long timeRequire;
 
     /**
      * 内存限制 kb
      */
-    private Integer memoryRequire;
+    private Long memoryRequire;
 
     /**
      * 测试数据地址
@@ -106,4 +113,10 @@ public class Problem {
      */
     @LastModifiedDate
     private Long updateTime;
+
+    public static Problem of(ProblemDTO problemDTO) {
+        Problem problem = BeanCopyUtils.copyObject(problemDTO, Problem.class);
+        problem.setState(EntityStateEnum.valueOf(problemDTO.getState()));
+        return problem;
+    }
 }

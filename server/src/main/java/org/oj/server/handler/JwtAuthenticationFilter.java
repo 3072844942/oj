@@ -34,7 +34,7 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
     @Autowired
     private AuthorizationFilter authorizationFilter;
 
-    private List<String> swaggerList = Arrays.asList("/v3", "/error", "/favicon.ico", "/webjars", "/doc.html");
+    private final List<String> swaggerList = Arrays.asList("/v3", "/error", "/favicon.ico", "/webjars", "/doc.html", "/assets");
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -80,9 +80,10 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
         if (swaggerList.stream().anyMatch(uri::contains)) {
             return  true;
         }
+        System.out.println(uri);
 
         if (!PermissionService.permissionMap.containsKey(uri)) {
-            throw new ErrorException(StatusCodeEnum.SYSTEM_ERROR);
+            throw new ErrorException("请求路径错误：" + uri);
         }
 
         Permission permission = PermissionService.permissionMap.get(uri);
