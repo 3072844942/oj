@@ -1,9 +1,13 @@
 package org.oj.server.dto;
 
-import lombok.*;
-import org.oj.server.enums.EntityStateEnum;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.oj.server.entity.User;
+import org.oj.server.util.BeanCopyUtils;
+
+import java.util.List;
 
 /**
  * 用户信息
@@ -12,7 +16,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * @date 2021/08/01
  * @since 2020-05-18
  */
-@Getter
+@Data
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class UserInfoDTO {
 
@@ -21,6 +27,8 @@ public class UserInfoDTO {
      * 和auth共用
      */
     private String id;
+
+    private List<String> roleIds;
 
     /**
      * 邮箱号
@@ -50,7 +58,7 @@ public class UserInfoDTO {
     /**
      * 是否禁言
      */
-    private Integer isDisable;
+    private Boolean isDisable;
 
     /**
      * 学号
@@ -70,5 +78,11 @@ public class UserInfoDTO {
     /**
      * 信息审核
      */
-    private Integer status;
+    private Integer state;
+
+    public static UserInfoDTO of(User userInfo) {
+        UserInfoDTO userInfoDTO = BeanCopyUtils.copyObject(userInfo, UserInfoDTO.class);
+        userInfoDTO.setState(userInfo.getState().getCode());
+        return userInfoDTO;
+    }
 }

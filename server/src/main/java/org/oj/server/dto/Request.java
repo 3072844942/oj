@@ -1,6 +1,6 @@
 package org.oj.server.dto;
 
-import org.oj.server.entity.UserAuth;
+import org.oj.server.entity.User;
 import org.oj.server.enums.PermissionEnum;
 
 /**
@@ -13,7 +13,7 @@ public class Request {
     /**
      * 请求的用户
      */
-    public static ThreadLocal<UserAuth> user = new ThreadLocal<>();
+    public static ThreadLocal<User> user = new ThreadLocal<>();
 
     /**
      * 请求的角色权限

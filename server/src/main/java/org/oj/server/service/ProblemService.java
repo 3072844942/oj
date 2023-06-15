@@ -5,8 +5,10 @@ import org.oj.server.dao.ProblemRepository;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.ProblemDTO;
 import org.oj.server.dto.Request;
+import org.oj.server.entity.Article;
 import org.oj.server.entity.Problem;
-import org.oj.server.entity.UserInfo;
+import org.oj.server.entity.ProblemExample;
+import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
@@ -33,7 +35,7 @@ public class ProblemService {
     @Autowired
     private ProblemRepository problemRepository;
     @Autowired
-    private UserInfoService userInfoService;
+    private UserService userService;
     @Autowired
     private MongoTemplate mongoTemplate;
 
@@ -80,9 +82,29 @@ public class ProblemService {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
 
-        Problem problem = Problem.of(problemDTO);
-        // 重置为草稿
-        problem.setState(EntityStateEnum.DRAFT);
+        Problem problem = byId.get();
+        problem.setUserId(Request.user.get().getId());
+        if (problemDTO.getTagIds() != null && problemDTO.getTagIds().size() != 0) problem.setTagIds(problemDTO.getTagIds());
+        if (StringUtils.isPresent(problemDTO.getTitle())) problem.setTitle(problemDTO.getTitle());
+        if (StringUtils.isPresent(problemDTO.getContent())) problem.setContent(problemDTO.getContent());
+        if (StringUtils.isPresent(problemDTO.getInputContent())) problem.setInputContent(problemDTO.getInputContent());
+        if (StringUtils.isPresent(problemDTO.getOutputContent())) problem.setOutputContent(problemDTO.getOutputContent());
+        if (problemDTO.getExamples() != null && problemDTO.getExamples().size() != 0)
+            problem.setExamples(problemDTO.getExamples().stream().map(ProblemExample::of).toList());
+        if (StringUtils.isPresent(problemDTO.getIntro())) problem.setIntro(problem.getIntro());
+        if (problemDTO.getTimeRequire() != 0) problem.setTimeRequire(problem.getTimeRequire());
+        if (problemDTO.getMemoryRequire() != 0) problem.setMemoryRequire(problem.getMemoryRequire());
+        if (problemDTO.getIsSpecial()) {
+            problem.setIsSpecial(true);
+            problem.setSpecialAddress(problemDTO.getSpecialAddress());
+        }
+        if (PermissionUtil.enableWrite("")) {
+            problem.setState(EntityStateEnum.valueOf(problemDTO.getState()));
+        } else {
+            // 没有权限不允许立刻公开
+            if (!EntityStateEnum.PUBLIC.equals(EntityStateEnum.valueOf(problemDTO.getState())))
+                problem.setState(EntityStateEnum.valueOf(problemDTO.getState()));
+        }
 
         // 保存
         problem = problemRepository.save(problem);
@@ -133,7 +155,7 @@ public class ProblemService {
         problemVO.setTags(
                 problem.getTagIds().stream().map(tagId -> TagVO.of(TagService.tagMap.get(tagId))).toList()
         );
-        problemVO.setAuthor(UserProfileVO.of(userInfoService.findById(problem.getUserId())));
+        problemVO.setAuthor(UserProfileVO.of(userService.findById(problem.getUserId())));
 
         return problemVO;
     }
@@ -230,7 +252,7 @@ public class ProblemService {
      */
     private List<ProblemSearchVO> parse(List<Problem> all) {
         List<String> userIds = all.stream().map(Problem::getUserId).toList();
-        Map<String, UserInfo> infoMap = userInfoService.findAllById(userIds);
+        Map<String, User> infoMap = userService.findAllById(userIds);
 
         return all.stream()
                 .map(a -> {

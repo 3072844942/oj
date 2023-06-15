@@ -98,7 +98,7 @@ public class CategoryService {
     public CategoryDTO updateOne(CategoryDTO categoryDTO) {
         CategoryDTO.check(categoryDTO);
 
-        // 数据已存在
+        // 数据不存在
         if (!categoryRepository.existsById(categoryDTO.getId())) {
             throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
         }

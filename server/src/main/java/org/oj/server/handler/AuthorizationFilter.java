@@ -7,7 +7,7 @@ import org.oj.server.dao.RoleRepository;
 import org.oj.server.dto.Request;
 import org.oj.server.entity.Permission;
 import org.oj.server.entity.Role;
-import org.oj.server.entity.UserAuth;
+import org.oj.server.entity.User;
 import org.oj.server.enums.PermissionEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
@@ -30,7 +30,7 @@ public class AuthorizationFilter {
     private RoleRepository roleRepository;
 
     public boolean doFilterInternal(HttpServletRequest request, HttpServletResponse response, Permission permission) throws ServletException, IOException {
-        UserAuth userAuth = Request.user.get();
+        User userAuth = Request.user.get();
         List<String> roleIds = userAuth.getRoleIds();
 
         List<Role> allById = roleRepository.findAllById(roleIds);

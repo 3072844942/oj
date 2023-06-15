@@ -6,7 +6,10 @@ import org.oj.server.dao.ProblemRepository;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.ContestDTO;
 import org.oj.server.dto.Request;
-import org.oj.server.entity.*;
+import org.oj.server.entity.Contest;
+import org.oj.server.entity.Problem;
+import org.oj.server.entity.RankInfo;
+import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
@@ -21,7 +24,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -33,7 +35,7 @@ public class ContestService {
     @Autowired
     private ContestRepository contestRepository;
     @Autowired
-    private UserInfoService userInfoService;
+    private UserService userService;
     @Autowired
     private ProblemRepository problemRepository;
     @Autowired
@@ -48,7 +50,7 @@ public class ContestService {
         }
 
         ContestInfoVO contestInfoVO = ContestInfoVO.of(contest);
-        contestInfoVO.setAuthor(UserProfileVO.of(userInfoService.findById(contest.getUserId())));
+        contestInfoVO.setAuthor(UserProfileVO.of(userService.findById(contest.getUserId())));
         // (如果有权限 || 是自己的) ||  (是公开的， 且到时间)
         // System.currentTimeMillis() 是毫秒
         if (PermissionUtil.enableRead(EntityStateEnum.REVIEW, contest.getUserId()) || (System.currentTimeMillis() / 1000) >= contest.getStartTime()) {
@@ -115,7 +117,7 @@ public class ContestService {
         return byId.get();
     }
 
-    public PageVO<UserInfoVO> findOneUser(String contestId, ConditionDTO conditionDTO) {
+    public PageVO<UserVO> findOneUser(String contestId, ConditionDTO conditionDTO) {
         ConditionDTO.check(conditionDTO);
 
         Contest contest = findById(contestId);
@@ -128,7 +130,7 @@ public class ContestService {
         List<String> ids = contest.getUserIds().subList(frontIndex, conditionDTO.getSize());
 
         return new PageVO<>(
-                ids.stream().map(id -> userInfoService.findById(id)).toList(),
+                ids.stream().map(id -> userService.findById(id)).toList(),
                 (long) contest.getUserIds().size()
         );
     }
@@ -194,12 +196,11 @@ public class ContestService {
      */
     private List<ContestProfileVO> parse(List<Contest> all) {
         List<String> userIds = all.stream().map(Contest::getUserId).toList();
-        Map<String, UserInfo> infoMap = userInfoService.findAllById(userIds);
 
         return all.stream()
                 .map(a -> {
                     ContestProfileVO contestProfileVO = ContestProfileVO.of(a);
-                    contestProfileVO.setAuthor(UserProfileVO.of(userInfoService.findById(a.getUserId())));
+                    contestProfileVO.setAuthor(UserProfileVO.of(userService.findById(a.getUserId())));
                     if (Request.user.get() != null) {
                         contestProfileVO.setIsSignUp(a.getUserIds().contains(Request.user.get().getId()));
                     }
@@ -225,55 +226,23 @@ public class ContestService {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
 
-        Contest contest = Contest.of(contestDTO);
-        // 重置为草稿
-        contest.setState(EntityStateEnum.DRAFT);
+        Contest contest = byId.get();
+        contest.setUserId(Request.user.get().getId());
+        if (StringUtils.isPresent(contestDTO.getTitle())) contest.setTitle(contestDTO.getTitle());
+        if (StringUtils.isPresent(contestDTO.getContent())) contest.setContent(contestDTO.getContent());
+        if (contestDTO.getStartTime() != 0) contest.setStartTime(contest.getStartTime());
+        if (contestDTO.getEndTime() != 0) contest.setEndTime(contest.getEndTime());
+        if (PermissionUtil.enableWrite("")) {
+            contest.setState(EntityStateEnum.valueOf(contestDTO.getState()));
+        } else {
+            // 没有权限不允许立刻公开
+            if (!EntityStateEnum.PUBLIC.equals(EntityStateEnum.valueOf(contestDTO.getState())))
+                contest.setState(EntityStateEnum.valueOf(contestDTO.getState()));
+        }
 
         // 保存
         contest = contestRepository.save(contest);
         return ContestDTO.of(contest);
-    }
-
-    public ContestDTO publishOne(String contestId) {
-        return updateOneState(contestId, EntityStateEnum.REVIEW);
-    }
-
-    /**
-     * 更新比赛状态
-     *
-     * @param id    比赛id
-     * @param state 状态
-     * @return
-     */
-    private ContestDTO updateOneState(String id, EntityStateEnum state) {
-        Contest contest = findById(id);
-
-        // 需要写权限
-        if (!PermissionUtil.enableWrite(contest.getUserId())) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        contest.setState(state);
-        contest = contestRepository.save(contest);
-
-        return ContestDTO.of(contest);
-    }
-
-    public ContestDTO hideOne(String contestId) {
-        return updateOneState(contestId, EntityStateEnum.DRAFT);
-    }
-
-    public ContestDTO verifyOne(String contestId) {
-        // 需要写权限
-        if (!PermissionUtil.enableWrite("")) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        return updateOneState(contestId, EntityStateEnum.PUBLIC);
-    }
-
-    public ContestDTO recycleOne(String contestId) {
-        return updateOneState(contestId, EntityStateEnum.DELETE);
     }
 
     public void deleteOne(String contestId) {
@@ -322,7 +291,7 @@ public class ContestService {
     }
 
     public ContestProfileVO signUp(String contestId) {
-        UserAuth userAuth = Request.user.get();
+        User userAuth = Request.user.get();
         if (userAuth == null) {
             throw new ErrorException(StatusCodeEnum.LOGIN_ERROR);
         }
@@ -336,7 +305,7 @@ public class ContestService {
         contest = contestRepository.save(contest);
 
         ContestProfileVO contestProfileVO = ContestProfileVO.of(contest);
-        contestProfileVO.setAuthor(UserProfileVO.of(userInfoService.findById(contest.getUserId())));
+        contestProfileVO.setAuthor(UserProfileVO.of(userService.findById(contest.getUserId())));
         contestProfileVO.setIsSignUp(true);
         return contestProfileVO;
     }

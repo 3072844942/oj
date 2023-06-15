@@ -34,4 +34,14 @@ public enum PermissionEnum {
         else if (p == 0) return p1;
         else return p2;
     }
+
+    public static PermissionEnum valueOf(Integer integer) {
+        PermissionEnum[] values = PermissionEnum.values();
+        for (PermissionEnum value : values) {
+            if (value.getCode().equals(integer)) {
+                return value;
+            }
+        }
+        return PermissionEnum.NONE;
+    }
 }

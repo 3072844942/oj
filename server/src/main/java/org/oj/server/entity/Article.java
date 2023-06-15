@@ -75,6 +75,7 @@ public class Article {
      * 是否置顶
      */
     private Boolean isTop;
+
     /**
      * 文章状态
      */

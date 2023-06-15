@@ -39,30 +39,6 @@ public class NoticeController extends BaseController {
         return ok(noticeService.updateOne(noticeDTO));
     }
 
-    @Operation(summary = "发布公告")
-    @PatchMapping("publish/{noticeId}")
-    public Object publishOne(@PathVariable String noticeId) {
-        return ok(noticeService.publishOne(noticeId));
-    }
-
-    @Operation(summary = "隐藏公告")
-    @PatchMapping("hide/{noticeId}")
-    public Object hideOne(@PathVariable String noticeId) {
-        return ok(noticeService.hideOne(noticeId));
-    }
-
-    @Operation(summary = "回收公告")
-    @PatchMapping("recycle/{noticeId}")
-    public Object recycleOne(@PathVariable String noticeId) {
-        return ok(noticeService.recycleOne(noticeId));
-    }
-
-    @Operation(summary = "恢复公告到草稿")
-    @PatchMapping("recover/{noticeId}")
-    public Object recoverOne(@PathVariable String noticeId) {
-        return ok(noticeService.hideOne(noticeId));
-    }
-
     @Operation(summary = "添加公告")
     @PutMapping("add")
     public Object insertOne(@RequestBody NoticeDTO noticeDTO) {

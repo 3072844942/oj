@@ -4,13 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.dto.RoleDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.PermissionEnum;
+import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -64,4 +67,18 @@ public class Role {
      */
     @LastModifiedDate
     private Long updateTime;
+
+    public static Role of(RoleDTO roleDTO) {
+        Role role = BeanCopyUtils.copyObject(roleDTO, Role.class);
+        role.setState(EntityStateEnum.valueOf(roleDTO.getState()));
+        Map<String, PermissionEnum> permissionEnumMap = new HashMap<>();
+        for (int i = 0; i < roleDTO.getPermissionIds().size(); i ++ ) {
+            permissionEnumMap.put(
+                    roleDTO.getPermissionIds().get(i),
+                    PermissionEnum.valueOf(roleDTO.getPermissionStates().get(i))
+            );
+        }
+        role.setPermissionIds(permissionEnumMap);
+        return role;
+    }
 }

@@ -5,10 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.enums.LoginTypeEnum;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.List;
 
 /**
  * 用户信息
@@ -21,15 +24,44 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("user_info")
-public class UserInfo {
+@Document("user")
+public class User {
 
     /**
      * 用户ID
-     * 和auth共用
      */
     @Id
     private String id;
+
+    /**
+     * 角色id
+     */
+    private List<String> roleIds;
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 密码
+     */
+    private String password;
+
+    /**
+     * 登录类型
+     */
+    private LoginTypeEnum loginType;
+
+    /**
+     * 用户登录ip
+     */
+    private String ipAddress;
+
+    /**
+     * ip来源
+     */
+    private String ipSource;
 
     /**
      * 邮箱号
@@ -59,7 +91,7 @@ public class UserInfo {
     /**
      * 是否禁言
      */
-    private Integer isDisable;
+    private Boolean isDisable;
 
     /**
      * 学号

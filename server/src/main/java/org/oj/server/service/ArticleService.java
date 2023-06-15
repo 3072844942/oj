@@ -7,7 +7,7 @@ import org.oj.server.dto.ArticleDTO;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.Request;
 import org.oj.server.entity.Article;
-import org.oj.server.entity.UserInfo;
+import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
@@ -37,7 +37,7 @@ public class ArticleService {
     @Autowired
     private ArticleRepository articleRepository;
     @Autowired
-    private UserInfoService userInfoService;
+    private UserService userService;
     @Autowired
     private MongoTemplate mongoTemplate;
 
@@ -87,9 +87,24 @@ public class ArticleService {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
 
-        Article article = Article.of(articleDTO);
-        // 重置为草稿
-        article.setState(EntityStateEnum.DRAFT);
+        Article article = byId.get();
+        article.setUserId(Request.user.get().getId());
+        if (articleDTO.getTagIds() != null && articleDTO.getTagIds().size() != 0) article.setTagIds(articleDTO.getTagIds());
+        if (StringUtils.isPresent(articleDTO.getCategoryId())) article.setCategoryId(articleDTO.getCategoryId());
+        if (StringUtils.isPresent(articleDTO.getCover())) article.setCover(articleDTO.getCover());
+        if (StringUtils.isPresent(articleDTO.getTitle())) article.setTitle(articleDTO.getTitle());
+        if (StringUtils.isPresent(articleDTO.getSummary())) article.setSummary(articleDTO.getSummary());
+        if (StringUtils.isPresent(articleDTO.getContent())) article.setContent(articleDTO.getContent());
+        if (PermissionUtil.enableWrite("")) {
+            article.setIsTop(articleDTO.getIsTop());
+            article.setState(EntityStateEnum.valueOf(articleDTO.getState()));
+        } else {
+            article.setIsTop(false);
+            // 没有权限不允许立刻公开
+            if (!EntityStateEnum.PUBLIC.equals(EntityStateEnum.valueOf(articleDTO.getState())))
+                article.setState(EntityStateEnum.valueOf(articleDTO.getState()));
+        }
+
         // 没有写权限
         if (!PermissionUtil.enableWrite("")) {
             article.setIsTop(false);
@@ -117,27 +132,6 @@ public class ArticleService {
         }
 
         articleRepository.deleteAllById(ids);
-    }
-
-    public ArticleDTO verifyOne(String id) {
-        // 需要写权限
-        if (!PermissionUtil.enableWrite("")) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        return updateOneState(id, EntityStateEnum.PUBLIC);
-    }
-
-    public ArticleDTO hideOne(String id) {
-        return updateOneState(id, EntityStateEnum.DRAFT);
-    }
-
-    public ArticleDTO publishOne(String id) {
-        return updateOneState(id, EntityStateEnum.REVIEW);
-    }
-
-    public ArticleDTO recycleOne(String id) {
-        return updateOneState(id, EntityStateEnum.DELETE);
     }
 
     public ArticleVO findOne(String id) {
@@ -173,7 +167,7 @@ public class ArticleService {
         articleVO.setTags(
                 article.getTagIds().stream().map(tagId -> TagVO.of(TagService.tagMap.get(tagId))).toList()
         );
-        articleVO.setAuthor(UserProfileVO.of(userInfoService.findById(article.getUserId())));
+        articleVO.setAuthor(UserProfileVO.of(userService.findById(article.getUserId())));
 
         return articleVO;
     }
@@ -192,20 +186,6 @@ public class ArticleService {
         return byId.get();
     }
 
-    private ArticleDTO updateOneState(String id, EntityStateEnum state) {
-        Article article = findById(id);
-
-        // 需要写权限
-        if (!PermissionUtil.enableWrite(article.getUserId())) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        article.setState(state);
-        article = articleRepository.save(article);
-
-        return ArticleDTO.of(article);
-    }
-
     public PageVO<ArticleSearchVO> find(ConditionDTO conditionDTO) {
         ConditionDTO.check(conditionDTO);
 
@@ -220,8 +200,7 @@ public class ArticleService {
             // 如果读的不是公开
             if (!state.equals(EntityStateEnum.PUBLIC)) {
                 throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-            }
-            else {
+            } else {
                 query.addCriteria(Criteria.where("state").is(state));
             }
         }
@@ -266,12 +245,13 @@ public class ArticleService {
 
     /**
      * 转换数据对象
+     *
      * @param all
      * @return
      */
     private List<ArticleSearchVO> parse(List<Article> all) {
         List<String> userIds = all.stream().map(Article::getUserId).toList();
-        Map<String, UserInfo> infoMap = userInfoService.findAllById(userIds);
+        Map<String, User> infoMap = userService.findAllById(userIds);
 
         return all.stream()
                 .map(a -> {

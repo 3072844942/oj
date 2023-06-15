@@ -43,29 +43,6 @@ public class ProblemController extends BaseController {
         return ok(problemService.updateOne(problemDTO));
     }
 
-    @Operation(summary = "发布题目")
-    @PatchMapping("publish/{problemId}")
-    public Object publishOne(@PathVariable String problemId) {
-        return ok(problemService.publishOne(problemId));
-    }
-
-    @Operation(summary = "隐藏题目")
-    @PatchMapping("hide/{problemId}")
-    public Object hideOne(@PathVariable String problemId) {
-        return ok(problemService.hideOne(problemId));
-    }
-
-    @Operation(summary = "回收题目")
-    @PatchMapping("recycle/{problemId}")
-    public Object recycleOne(@PathVariable String problemId) {
-        return ok(problemService.recycleOne(problemId));
-    }
-
-    @Operation(summary = "恢复题目到草稿")
-    @PatchMapping("recover/{problemId}")
-    public Object recoverOne(@PathVariable String problemId) {
-        return ok(problemService.hideOne(problemId));
-    }
 
     @Operation(summary = "添加题目")
     @PutMapping("add")

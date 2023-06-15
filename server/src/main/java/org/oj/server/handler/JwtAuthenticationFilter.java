@@ -1,14 +1,13 @@
 package org.oj.server.handler;
 
 import io.jsonwebtoken.Claims;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.oj.server.dao.PermissionRepository;
-import org.oj.server.dao.UserAuthRepository;
+import org.oj.server.dao.UserRepository;
 import org.oj.server.dto.Request;
 import org.oj.server.entity.Permission;
-import org.oj.server.entity.UserAuth;
+import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
@@ -30,7 +29,7 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
     @Autowired
     private PermissionRepository permissionRepository;
     @Autowired
-    private UserAuthRepository userAuthRepository;
+    private UserRepository userRepository;
     @Autowired
     private AuthorizationFilter authorizationFilter;
 
@@ -54,23 +53,22 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
             }
 
             String id = claims.getId();
-            Optional<UserAuth> byId = userAuthRepository.findById(id);
+            Optional<User> byId = userRepository.findById(id);
             if (byId.isEmpty()) {
                 throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
             }
 
-            UserAuth userAuth = byId.get();
-            if (userAuth.getState().equals(EntityStateEnum.DELETE)) {
+            User user = byId.get();
+            if (user.getState().equals(EntityStateEnum.DELETE)) {
                 throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
             }
-            Request.user.set(userAuth);
+            Request.user.set(user);
 
             // 更新用户信息
             String ipAddress = IpUtils.getIpAddress(request);
-            userAuth.setIpAddress(ipAddress);
-            userAuth.setIpSource(IpUtils.getIpSource(ipAddress));
-            userAuth.setLastLoginTime(System.currentTimeMillis());
-            userAuthRepository.save(userAuth);
+            user.setIpAddress(ipAddress);
+            user.setIpSource(IpUtils.getIpSource(ipAddress));
+            userRepository.save(user);
         }
 
         // 请求路由

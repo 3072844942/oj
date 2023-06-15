@@ -50,36 +50,6 @@ public class ContestController extends BaseController {
     public Object updateOne(@RequestBody ContestDTO contestDTO) {
         return ok(contestService.updateOne(contestDTO));
     }
-
-    @Operation(summary = "发布比赛")
-    @PatchMapping("publish/{contestId}")
-    public Object publishOne(@PathVariable String contestId) {
-        return ok(contestService.publishOne(contestId));
-    }
-
-    @Operation(summary = "隐藏比赛")
-    @PatchMapping("hide/{contestId}")
-    public Object hideOne(@PathVariable String contestId) {
-        return ok(contestService.hideOne(contestId));
-    }
-
-    @Operation(summary = "审核比赛")
-    @PatchMapping("verify/{contestId}")
-    public Object verifyOne(@PathVariable String contestId) {
-        return ok(contestService.verifyOne(contestId));
-    }
-
-    @Operation(summary = "回收比赛")
-    @PatchMapping("recycle/{contestId}")
-    public Object recycleOne(@PathVariable String contestId) {
-        return ok(contestService.recycleOne(contestId));
-    }
-
-    @Operation(summary = "恢复比赛到草稿")
-    @PatchMapping("recover/{contestId}")
-    public Object recoverOne(@PathVariable String contestId) {
-        return ok(contestService.hideOne(contestId));
-    }
     @Operation(summary = "报名比赛")
     @PatchMapping("sign/{contestId}")
     public Object signUp(@PathVariable String contestId) {

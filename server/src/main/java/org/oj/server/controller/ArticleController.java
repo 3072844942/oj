@@ -39,36 +39,6 @@ public class ArticleController extends BaseController {
         return ok(articleService.updateOne(articleDTO));
     }
 
-    @Operation(summary = "发布文章")
-    @PatchMapping("publish/{articleId}")
-    public Object publishOne(@PathVariable String articleId) {
-        return ok(articleService.publishOne(articleId));
-    }
-
-    @Operation(summary = "隐藏文章")
-    @PatchMapping("hide/{articleId}")
-    public Object hideOne(@PathVariable String articleId) {
-        return ok(articleService.hideOne(articleId));
-    }
-
-    @Operation(summary = "审核文章")
-    @PatchMapping("verify/{articleId}")
-    public Object verifyOne(@PathVariable String articleId) {
-        return ok(articleService.verifyOne(articleId));
-    }
-
-    @Operation(summary = "回收文章")
-    @PatchMapping("recycle/{articleId}")
-    public Object recycleOne(@PathVariable String articleId) {
-        return ok(articleService.recycleOne(articleId));
-    }
-
-    @Operation(summary = "恢复文章到草稿")
-    @PatchMapping("recover/{articleId}")
-    public Object recoverOne(@PathVariable String articleId) {
-        return ok(articleService.hideOne(articleId));
-    }
-
     @Operation(summary = "添加文章")
     @PutMapping("add")
     public Object insertOne(@RequestBody ArticleDTO articleDTO) {

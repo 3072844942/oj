@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.oj.server.entity.UserInfo;
+import org.oj.server.entity.User;
 import org.oj.server.util.BeanCopyUtils;
 
 /**
@@ -36,11 +36,11 @@ public class UserProfileVO {
     @Schema(description = "昵称")
     private String nickname;
 
-    public static UserProfileVO of(UserInfo userInfo) {
+    public static UserProfileVO of(User userInfo) {
         return BeanCopyUtils.copyObject(userInfo, UserProfileVO.class);
     }
 
-    public static UserProfileVO of(UserInfoVO userInfo) {
+    public static UserProfileVO of(UserVO userInfo) {
         return BeanCopyUtils.copyObject(userInfo, UserProfileVO.class);
     }
 }

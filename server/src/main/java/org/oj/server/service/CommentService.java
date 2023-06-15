@@ -1,11 +1,11 @@
 package org.oj.server.service;
 
 import org.oj.server.dao.CommentRepository;
-import org.oj.server.dao.UserInfoRepository;
+import org.oj.server.dao.UserRepository;
 import org.oj.server.dto.CommentDTO;
 import org.oj.server.dto.Request;
 import org.oj.server.entity.Comment;
-import org.oj.server.entity.UserInfo;
+import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
@@ -31,7 +31,7 @@ public class CommentService {
     @Autowired
     private CommentRepository commentRepository;
     @Autowired
-    private UserInfoRepository userInfoRepository;
+    private UserRepository userInfoRepository;
 
     //todo
     public PageVO<CommentVO> find(String articleId) {
@@ -44,8 +44,8 @@ public class CommentService {
 
         List<String> userIds = new ArrayList<>(all.stream().map(Comment::getUserId).toList());
         userIds.addAll(all.stream().map(Comment::getReplyUserId).toList());
-        List<UserInfo> infos = userInfoRepository.findAllById(userIds);
-        Map<String, UserInfo> infoMap = infos.stream().collect(Collectors.toMap(UserInfo::getId, a -> a, (k1, k2) -> k1));
+        List<User> infos = userInfoRepository.findAllById(userIds);
+        Map<String, User> infoMap = infos.stream().collect(Collectors.toMap(User::getId, a -> a, (k1, k2) -> k1));
 
         List<CommentVO> list = all.stream().map(c -> {
             CommentVO commentVO = CommentVO.of(c);

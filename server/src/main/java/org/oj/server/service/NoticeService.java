@@ -5,8 +5,9 @@ import org.oj.server.dao.NoticeRepository;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.NoticeDTO;
 import org.oj.server.dto.Request;
+import org.oj.server.entity.Article;
 import org.oj.server.entity.Notice;
-import org.oj.server.entity.UserInfo;
+import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
@@ -36,7 +37,7 @@ public class NoticeService {
     @Autowired
     private NoticeRepository noticeRepository;
     @Autowired
-    private UserInfoService userInfoService;
+    private UserService userService;
     @Autowired
     private MongoTemplate mongoTemplate;
 
@@ -86,12 +87,19 @@ public class NoticeService {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
 
-        Notice notice = Notice.of(noticeDTO);
-        // 重置为草稿
-        notice.setState(EntityStateEnum.DRAFT);
-        // 没有写权限
-        if (!PermissionUtil.enableWrite("")) {
+        Notice notice = byId.get();
+        notice.setUserId(Request.user.get().getId());
+        if (StringUtils.isPresent(noticeDTO.getCover())) notice.setCover(noticeDTO.getCover());
+        if (StringUtils.isPresent(noticeDTO.getTitle())) notice.setTitle(noticeDTO.getTitle());
+        if (StringUtils.isPresent(noticeDTO.getContent())) notice.setContent(noticeDTO.getContent());
+        if (PermissionUtil.enableWrite("")) {
+            notice.setIsTop(noticeDTO.getIsTop());
+            notice.setState(EntityStateEnum.valueOf(noticeDTO.getState()));
+        } else {
             notice.setIsTop(false);
+            // 没有权限不允许立刻公开
+            if (!EntityStateEnum.PUBLIC.equals(EntityStateEnum.valueOf(noticeDTO.getState())))
+                notice.setState(EntityStateEnum.valueOf(noticeDTO.getState()));
         }
         // 保存
         notice = noticeRepository.save(notice);
@@ -118,19 +126,6 @@ public class NoticeService {
         noticeRepository.deleteAllById(ids);
     }
 
-
-    public NoticeDTO hideOne(String id) {
-        return updateOneState(id, EntityStateEnum.DRAFT);
-    }
-
-    public NoticeDTO publishOne(String id) {
-        return updateOneState(id, EntityStateEnum.PUBLIC);
-    }
-
-    public NoticeDTO recycleOne(String id) {
-        return updateOneState(id, EntityStateEnum.DELETE);
-    }
-
     public NoticeVO findOne(String id) {
         Notice notice = findById(id);
         // 无读权限
@@ -139,7 +134,7 @@ public class NoticeService {
         }
         NoticeVO noticeVO = NoticeVO.of(notice);
 
-        noticeVO.setAuthor(UserProfileVO.of(userInfoService.findById(notice.getUserId())));
+        noticeVO.setAuthor(UserProfileVO.of(userService.findById(notice.getUserId())));
 
         return noticeVO;
     }
@@ -156,20 +151,6 @@ public class NoticeService {
         }
 
         return byId.get();
-    }
-
-    private NoticeDTO updateOneState(String id, EntityStateEnum state) {
-        Notice notice = findById(id);
-
-        // 需要写权限
-        if (!PermissionUtil.enableWrite(notice.getUserId())) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        notice.setState(state);
-        notice = noticeRepository.save(notice);
-
-        return NoticeDTO.of(notice);
     }
 
     public PageVO<NoticeSearchVO> find(ConditionDTO conditionDTO) {
@@ -229,7 +210,7 @@ public class NoticeService {
      */
     private List<NoticeSearchVO> parse(List<Notice> all) {
         List<String> userIds = all.stream().map(Notice::getUserId).toList();
-        Map<String, UserInfo> infoMap = userInfoService.findAllById(userIds);
+        Map<String, User> infoMap = userService.findAllById(userIds);
 
         return all.stream()
                 .map(a -> {

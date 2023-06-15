@@ -55,6 +55,10 @@ public class ConditionDTO {
     private String userId = "";
 
     @Builder.Default
+    @Schema(description = "学院id")
+    private String facultyId = "";
+
+    @Builder.Default
     @Schema(description = "id集合")
     private List<String> ids = new ArrayList<>();
 
