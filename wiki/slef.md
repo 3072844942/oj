@@ -27,9 +27,14 @@
 
 
 ## docker
+
 + docker run -itd --name redis -p 6379:6379 redis --requirepass "124609"
+
 + docker run -itd --name mongo -p 27017:27017 mongo --auth
+
 + docker run -itd --name rabbitmq -p 15672:15672 -p 5672:5672 -e RABBITMQ_DEFAULT_USER=admin -e RABBITMQ_DEFAULT_PASS=124609 rabbitmq:management
+
++ docker run -d --name es -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:8.8.1
 
 ## 思考
 #### 权限
