@@ -38,8 +38,7 @@ public class PermissionService {
     /**
      * 加载所有信息
      */
-    @PostConstruct
-    private void init() {
+    public void init() {
         RequestMappingHandlerMapping mapping = applicationContext.getBean(RequestMappingHandlerMapping.class);
 
         // 获取url与类和方法的对应信息

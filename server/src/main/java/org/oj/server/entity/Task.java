@@ -67,7 +67,6 @@ public class Task implements Callable<Record> {
         }
 
         String cmd = LanguageUtil.cmdPrefix(language) + code;
-
         for (int i = 1; ; i++) {
             String inPath = problem.getAddress() + i + ".in";
             // 文件不存在则退出
@@ -77,6 +76,10 @@ public class Task implements Callable<Record> {
 
             try {
                 String input = FileUtils.read(inPath);
+
+                // 使用 Runtime.exec() 执行 ulimit 命令设置资源限制
+                Runtime.getRuntime().exec("ulimit -m " + problem.getMemoryRequire()); // 设置最大内存限制
+                Runtime.getRuntime().exec("ulimit -t " + problem.getTimeRequire() / 1000.0d);      // 设置 CPU 时间限制
 
                 // 创建进程构建器
                 ProcessBuilder processBuilder = new ProcessBuilder(cmd);
@@ -136,7 +139,7 @@ public class Task implements Callable<Record> {
                     }
                 }
             } catch (IOException | InterruptedException e) {
-                throw new ErrorException(StatusCodeEnum.FAIL.getCode(), e.getMessage());
+                record.setResult(JudgeStateEnum.RUNTIME_ERROR);
             }
         }
         return record;

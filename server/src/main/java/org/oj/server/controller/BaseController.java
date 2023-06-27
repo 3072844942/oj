@@ -8,6 +8,7 @@ import org.oj.server.vo.PageVO;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -25,6 +26,10 @@ import java.util.Map;
 @Log4j2
 @RestControllerAdvice
 public abstract class BaseController {
+    @GetMapping("hello")
+    public Object hello() {
+        return Map.of("hello", new Date().toString());
+    }
 
     @ExceptionHandler(WarnException.class)
     public final Object webExchangeBindException(WarnException ex) {

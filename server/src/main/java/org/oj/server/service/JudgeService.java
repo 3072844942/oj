@@ -105,6 +105,10 @@ public class JudgeService {
 
         String cmd = LanguageUtil.cmdPrefix(judgeDTO.getLanguage()) + path;
         try {
+            // 使用 Runtime.exec() 执行 ulimit 命令设置资源限制
+            Runtime.getRuntime().exec("ulimit -m 10000000"); // 设置最大内存限制为 10MB
+            Runtime.getRuntime().exec("ulimit -t 10");      // 设置 CPU 时间限制为 10 秒
+
             // 创建进程构建器
             ProcessBuilder processBuilder = new ProcessBuilder(cmd);
             // 启动进程
@@ -115,7 +119,7 @@ public class JudgeService {
             outputStream.flush();
             outputStream.close();
 
-            boolean finished = process.waitFor(10 * 1000, TimeUnit.MILLISECONDS);
+            boolean finished = process.waitFor(10, TimeUnit.SECONDS);
             if (!finished) {
                 throw new ErrorException(StatusCodeEnum.FAIL);
             }

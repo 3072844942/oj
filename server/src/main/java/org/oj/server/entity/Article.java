@@ -1,6 +1,5 @@
 package org.oj.server.entity;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,68 +30,56 @@ import java.util.List;
 public class Article {
 
     /**
-     * id
-     */
-    @Id
-    private String id;
-
-    /**
-     * 作者
-     */
-    private String userId;
-
-    /**
-     * 标签Id
-     */
-    private List<String> tagIds;
-
-    /**
-     * 分类id
-     */
-    private String categoryId;
-
-    /**
-     * 文章缩略图
-     */
-    private String cover;
-
-    /**
-     * 标题
-     */
-    private String title;
-
-    /**
-     * 摘要
-     */
-    private String summary;
-
-    /**
-     * 内容
-     */
-    private String content;
-
-    /**
-     * 是否置顶
-     */
-    private Boolean isTop;
-
-    /**
      * 文章状态
      */
     protected EntityStateEnum state;
-
     /**
      * 修改时间
      */
     @LastModifiedDate
     protected Long updateTime;
-
     /**
      * 创建时间
      */
     @CreatedDate
     protected Long creatTime;
-
+    /**
+     * id
+     */
+    @Id
+    private String id;
+    /**
+     * 作者
+     */
+    private String userId;
+    /**
+     * 标签Id
+     */
+    private List<String> tagIds;
+    /**
+     * 分类id
+     */
+    private String categoryId;
+    /**
+     * 文章缩略图
+     */
+    private String cover;
+    /**
+     * 标题
+     */
+    private String title;
+    /**
+     * 摘要
+     */
+    private String summary;
+    /**
+     * 内容
+     */
+    private String content;
+    /**
+     * 是否置顶
+     */
+    private Boolean isTop;
 
     public static Article of(ArticleDTO articleDTO) {
         Article article = BeanCopyUtils.copyObject(articleDTO, Article.class);

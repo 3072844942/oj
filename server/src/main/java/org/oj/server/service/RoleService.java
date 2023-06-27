@@ -29,8 +29,6 @@ import java.util.stream.Collectors;
  * @since 2023/5/31 下午3:14
  */
 @Service
-// 保证permission先写入数据库
-@DependsOn("permissionService")
 public class RoleService {
     @Autowired
     private RoleRepository roleRepository;
@@ -42,14 +40,11 @@ public class RoleService {
         return allById.stream().map(RoleProfileVO::of).collect(Collectors.toMap(RoleProfileVO::getId, a -> a, (k1, k2) -> k1));
     }
 
-    @PostConstruct
-    private void init() {
+    public void init() {
         // todo menuList
         Collection<Permission> values = PermissionService.permissionMap.values();
         Map<String, PermissionEnum> all = new HashMap<>();
-        values.forEach(i -> {
-            all.put(i.getId(), PermissionEnum.WRITE);
-        });
+        values.forEach(i -> all.put(i.getId(), PermissionEnum.WRITE));
 
         Role root = new Role(
                 "root",
