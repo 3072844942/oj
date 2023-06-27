@@ -1,5 +1,6 @@
 package org.oj.server.service;
 
+import org.oj.server.config.OJConfig;
 import org.oj.server.dto.JudgeDTO;
 import org.oj.server.dto.PoolInfoDTO;
 import org.oj.server.dto.Request;
@@ -41,6 +42,8 @@ public class JudgeService {
     private UploadService uploadService;
     @Autowired
     private MongoTemplate mongoTemplate;
+    @Autowired
+    private OJConfig ojConfig;
 
     @Transactional
     public RecordVO judge(JudgeDTO judgeDTO) {
@@ -63,7 +66,7 @@ public class JudgeService {
                 .code(path)
                 .language(judgeDTO.getLanguage())
                 .problem(problem)
-                .out(uploadService.base + FilePathEnum.JUDGE.getPath() + System.currentTimeMillis() + "/")
+                .out(ojConfig.getBase() + FilePathEnum.JUDGE.getPath() + System.currentTimeMillis() + "/")
                 .build();
 
         // 等待运行

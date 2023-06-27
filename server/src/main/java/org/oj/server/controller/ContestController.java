@@ -8,6 +8,7 @@ import org.oj.server.service.ContestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -74,5 +75,11 @@ public class ContestController extends BaseController {
     public Object delete(@RequestBody List<String> ids) {
         contestService.delete(ids);
         return ok();
+    }
+
+    @Operation(summary = "导出成绩")
+    @GetMapping("export/{contestId}")
+    public Object export(@PathVariable String contestId){
+        return ok(contestService.export(contestId));
     }
 }

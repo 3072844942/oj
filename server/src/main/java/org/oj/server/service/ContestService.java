@@ -1,5 +1,9 @@
 package org.oj.server.service;
 
+import com.alibaba.excel.EasyExcel;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.oj.server.config.OJConfig;
 import org.oj.server.constant.HtmlConst;
 import org.oj.server.dao.ContestRepository;
 import org.oj.server.dao.ProblemRepository;
@@ -11,9 +15,11 @@ import org.oj.server.entity.Problem;
 import org.oj.server.entity.RankInfo;
 import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.enums.FilePathEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
+import org.oj.server.util.Excel;
 import org.oj.server.util.PermissionUtil;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.*;
@@ -23,8 +29,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * @author march
@@ -40,6 +51,8 @@ public class ContestService {
     private ProblemRepository problemRepository;
     @Autowired
     private MongoTemplate mongoTemplate;
+    @Autowired
+    private OJConfig ojConfig;
 
     public ContestInfoVO findOne(String contestId) {
         Contest contest = findById(contestId);
@@ -95,13 +108,20 @@ public class ContestService {
             throw new ErrorException(StatusCodeEnum.INDEX_OUT_OF_BOUND);
         }
 
+        List<RankInfo> rankInfos = list.subList(frontIndex, conditionDTO.getSize());
+        Map<String, User> userMap = userService.findAllById(rankInfos.stream().map(RankInfo::getUserId).toList());
+
+
         return new PageVO<>(
-                list.subList(frontIndex, conditionDTO.getSize()).stream().map(rankInfo -> {
-                    RankInfoVO of = RankInfoVO.of(rankInfo);
-                    // 根据比赛的题目id顺序进行转换
-                    of.setProblemStates(contest.getProblemIds().stream()
-                            .map(id -> ProblemStateVO.of(rankInfo.getProblemStateMap().get(id))).toList());
-                    return of;
+                rankInfos.stream().map(i -> {
+                    RankInfoVO rankInfoVO = RankInfoVO.of(i);
+                    // 设置用户
+                    rankInfoVO.setUser(UserProfileVO.of(userMap.get(i.getUserId())));
+                    // 根据比赛的题目顺序生成状态
+                    rankInfoVO.setProblemStates(contest.getProblemIds().stream().map(j -> {
+                        return ProblemStateVO.of(i.getProblemStateMap().get(j));
+                    }).toList());
+                    return rankInfoVO;
                 }).toList(),
                 count
         );
@@ -308,5 +328,58 @@ public class ContestService {
         contestProfileVO.setAuthor(UserProfileVO.of(userService.findById(contest.getUserId())));
         contestProfileVO.setIsSignUp(true);
         return contestProfileVO;
+    }
+
+    public String export(String contestId) {
+        String path = ojConfig.getBase() + FilePathEnum.EXCEL.getPath() + contestId + ".xlsx";
+        File file = new File(path);
+        if (file.exists()) { // 已经生成过
+            return ojConfig.getUrlBase() + FilePathEnum.EXCEL.getPath() + contestId + ".xlsx";
+        }
+
+        Contest contest = findById(contestId);
+        if (contest.getEndTime() >= System.currentTimeMillis() / 1000) {
+            throw new WarnException("比赛未结束");
+        }
+
+        Collection<RankInfo> values = contest.getRank().values();
+        // 查找所有有记录的用户
+        Map<String, User> userMap = userService.findAllById(values.stream().map(RankInfo::getUserId).toList());
+
+        // 写入excel
+        try (Excel excel = new Excel()) {
+            // 排序，并组装
+            List<RankInfoVO> voList = values.stream().sorted((a, b) -> {
+                // 优先根据过题数， 大的在前面
+                if (!a.getCount().equals(b.getCount())) return a.getCount().compareTo(b.getCount());
+                // 随后根据罚时 小的在前面
+                if (!a.getPenalty().equals(b.getPenalty())) return -a.getPenalty().compareTo(b.getPenalty());
+                // 避免 a == b 和 b == a
+                return a.getUserId().compareTo(b.getUserId());
+            }).map(i -> {
+                RankInfoVO rankInfoVO = RankInfoVO.of(i);
+                // 设置用户
+                rankInfoVO.setUser(UserProfileVO.of(userMap.get(i.getUserId())));
+                // 根据比赛的题目顺序生成状态
+                rankInfoVO.setProblemStates(contest.getProblemIds().stream().map(j -> {
+                    return ProblemStateVO.of(i.getProblemStateMap().get(j));
+                }).toList());
+                return rankInfoVO;
+            }).toList();
+
+            // 查找题目名称
+            List<String> titles = problemRepository.findAllById(contest.getProblemIds())
+                    .stream().map(Problem::getTitle).toList();
+
+            excel.addSheet("ranks",
+                    RankInfoVO.getHeader(titles),
+                    voList);
+
+            excel.save(path);
+
+            return ojConfig.getUrlBase() + FilePathEnum.EXCEL.getPath() + contestId + ".xlsx";
+        } catch (IOException e) {
+            throw new ErrorException(StatusCodeEnum.SYSTEM_ERROR);
+        }
     }
 }

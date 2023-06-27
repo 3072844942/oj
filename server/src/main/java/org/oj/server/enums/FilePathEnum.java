@@ -37,7 +37,8 @@ public enum FilePathEnum {
      * 配置图片路径
      */
     CONFIG("config/","配置图片路径"),
-    JUDGE("judge/", "评测路径");
+    JUDGE("judge/", "评测路径"),
+    EXCEL("excel/", "表格路径");
 
     /**
      * 路径

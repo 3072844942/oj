@@ -1,10 +1,12 @@
 package org.oj.server.service;
 
+import org.oj.server.config.OJConfig;
 import org.oj.server.enums.FilePathEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.util.LanguageUtil;
 import org.oj.server.util.UnPackUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,11 +22,8 @@ import java.io.IOException;
  */
 @Service
 public class UploadService {
-    @Value("${oj.upload.base}")
-    public String base;
-
-    @Value("${oj.upload.url}")
-    private String urlBase;
+    @Autowired
+    private OJConfig ojConfig;
 
     public String uploadImage(MultipartFile file) {
         return upload(file, FilePathEnum.IMAGE);
@@ -44,7 +43,7 @@ public class UploadService {
         String type = originFileName.substring(originFileName.lastIndexOf('.'));
 
         // 解压路径  本地路径/数据文件夹/系统当前时间/
-        String path = base + FilePathEnum.RECORD.getPath() + System.currentTimeMillis() + '/';
+        String path = ojConfig.getBase() + FilePathEnum.RECORD.getPath() + System.currentTimeMillis() + '/';
         File dest = new File(path + originFileName);
         try {
             if (!dest.getParentFile().mkdirs()) {
@@ -67,7 +66,7 @@ public class UploadService {
             dest.delete();
         }
 
-        return urlBase + FilePathEnum.RECORD.getPath() + System.currentTimeMillis() + '/';
+        return ojConfig.getUrlBase() + FilePathEnum.RECORD.getPath() + System.currentTimeMillis() + '/';
     }
 
     public String upload(MultipartFile file, FilePathEnum filePath) {
@@ -78,7 +77,7 @@ public class UploadService {
         String originFileName = file.getOriginalFilename();
         String fileName = System.currentTimeMillis() + originFileName.substring(originFileName.lastIndexOf('.'));
 
-        File dest = new File(base + filePath.getPath() + fileName);
+        File dest = new File(ojConfig.getBase() + filePath.getPath() + fileName);
 
         if (!dest.getAbsoluteFile().exists()) {
             dest.getParentFile().mkdirs();
@@ -88,12 +87,12 @@ public class UploadService {
         } catch (IOException e) {
             throw new ErrorException(StatusCodeEnum.FAIL);
         }
-        return urlBase + filePath.getPath() + fileName;
+        return ojConfig.getUrlBase() + filePath.getPath() + fileName;
     }
 
     public String upload(String code, Integer language) {
         // 解压路径  本地路径/数据文件夹/系统当前时间/
-        String path = base + FilePathEnum.JUDGE.getPath() + System.currentTimeMillis() + LanguageUtil.fileSuffix(language);
+        String path = ojConfig.getBase() + FilePathEnum.JUDGE.getPath() + System.currentTimeMillis() + LanguageUtil.fileSuffix(language);
         try {
             BufferedWriter out = new BufferedWriter(new FileWriter(path));
             out.write(code);

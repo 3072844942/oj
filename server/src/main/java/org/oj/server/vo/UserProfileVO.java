@@ -36,6 +36,12 @@ public class UserProfileVO {
     @Schema(description = "昵称")
     private String nickname;
 
+    @Schema(description = "名称")
+    private String name;
+
+    @Schema(description = "学号")
+    private String number;
+
     public static UserProfileVO of(User userInfo) {
         return BeanCopyUtils.copyObject(userInfo, UserProfileVO.class);
     }
