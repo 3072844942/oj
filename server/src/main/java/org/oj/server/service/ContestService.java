@@ -39,16 +39,19 @@ import java.util.Optional;
  */
 @Service
 public class ContestService {
-    @Autowired
-    private ContestRepository contestRepository;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private ProblemRepository problemRepository;
-    @Autowired
-    private MongoTemplate mongoTemplate;
-    @Autowired
-    private OJConfig ojConfig;
+    private final ContestRepository contestRepository;
+    private final UserService userService;
+    private final ProblemRepository problemRepository;
+    private final MongoTemplate mongoTemplate;
+    private final OJConfig ojConfig;
+
+    public ContestService(ContestRepository contestRepository, UserService userService, ProblemRepository problemRepository, MongoTemplate mongoTemplate, OJConfig ojConfig) {
+        this.contestRepository = contestRepository;
+        this.userService = userService;
+        this.problemRepository = problemRepository;
+        this.mongoTemplate = mongoTemplate;
+        this.ojConfig = ojConfig;
+    }
 
     public ContestInfoVO findOne(String contestId) {
         Contest contest = findById(contestId);

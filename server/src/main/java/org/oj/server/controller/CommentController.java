@@ -17,8 +17,11 @@ import java.util.List;
 @RequestMapping("comment")
 @Tag(name = "文章评论")
 public class CommentController extends BaseController {
-    @Autowired
-    private CommentService commentService;
+    private final CommentService commentService;
+
+    public CommentController(CommentService commentService) {
+        this.commentService = commentService;
+    }
 
     @Operation(description = "查询评论列表")
     @GetMapping("{articleId}")

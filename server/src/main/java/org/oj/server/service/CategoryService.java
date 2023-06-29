@@ -4,16 +4,13 @@ import jakarta.annotation.PostConstruct;
 import org.oj.server.dao.CategoryRepository;
 import org.oj.server.dto.CategoryDTO;
 import org.oj.server.dto.ConditionDTO;
-import org.oj.server.entity.Article;
 import org.oj.server.entity.Category;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
-import org.oj.server.exception.WarnException;
 import org.oj.server.util.PermissionUtil;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.CategoryVO;
 import org.oj.server.vo.PageVO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -30,10 +27,13 @@ import java.util.Map;
 @Service
 public class CategoryService {
     public static final Map<String, Category> categoryMap = new HashMap<>();
-    @Autowired
-    private CategoryRepository categoryRepository;
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final CategoryRepository categoryRepository;
+    private final MongoTemplate mongoTemplate;
+
+    public CategoryService(CategoryRepository categoryRepository, MongoTemplate mongoTemplate) {
+        this.categoryRepository = categoryRepository;
+        this.mongoTemplate = mongoTemplate;
+    }
 
     public CategoryVO insertOne(CategoryDTO categoryDTO) {
         CategoryDTO.check(categoryDTO);

@@ -15,8 +15,11 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class RabbitMqService {
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private final RabbitTemplate rabbitTemplate;
+
+    public RabbitMqService(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     /**
      * 发送验证码

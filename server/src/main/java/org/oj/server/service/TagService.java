@@ -31,10 +31,13 @@ import java.util.Map;
 @Service
 public class TagService {
     public static final Map<String, Tag> tagMap = new HashMap<>();
-    @Autowired
-    private TagRepository tagRepository;
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final TagRepository tagRepository;
+    private final MongoTemplate mongoTemplate;
+
+    public TagService(TagRepository tagRepository, MongoTemplate mongoTemplate) {
+        this.tagRepository = tagRepository;
+        this.mongoTemplate = mongoTemplate;
+    }
 
     public TagVO insertOne(TagDTO tagDTO) {
         TagDTO.check(tagDTO);

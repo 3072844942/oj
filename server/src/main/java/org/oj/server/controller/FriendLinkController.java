@@ -18,8 +18,11 @@ import java.util.List;
 @RequestMapping("link")
 @Tag(name = "友链接口")
 public class FriendLinkController extends BaseController {
-    @Autowired
-    private FriendLinkService friendLinkService;
+    private final FriendLinkService friendLinkService;
+
+    public FriendLinkController(FriendLinkService friendLinkService) {
+        this.friendLinkService = friendLinkService;
+    }
 
     @Operation(summary = "查找友链列表")
     @GetMapping("list")

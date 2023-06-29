@@ -18,8 +18,11 @@ import java.util.List;
 @RequestMapping("notice")
 @Tag(name = "公告接口")
 public class NoticeController extends BaseController {
-    @Autowired
-    private NoticeService noticeService;
+    private final NoticeService noticeService;
+
+    public NoticeController(NoticeService noticeService) {
+        this.noticeService = noticeService;
+    }
 
     @Operation(summary = "根据id查找公告")
     @GetMapping("{noticeId}")

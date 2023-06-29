@@ -26,8 +26,11 @@ import java.util.Map;
  */
 @Component
 public class AuthorizationFilter {
-    @Autowired
-    private RoleRepository roleRepository;
+    private final RoleRepository roleRepository;
+
+    public AuthorizationFilter(RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
+    }
 
     public boolean doFilterInternal(HttpServletRequest request, HttpServletResponse response, Permission permission) throws ServletException, IOException {
         User userAuth = Request.user.get();

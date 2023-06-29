@@ -18,8 +18,11 @@ import java.util.List;
 @RequestMapping("category")
 @Tag(name = "分类接口")
 public class CategoryController extends BaseController {
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
+
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
 
     @Operation(summary = "查找分类列表")
     @GetMapping("list")

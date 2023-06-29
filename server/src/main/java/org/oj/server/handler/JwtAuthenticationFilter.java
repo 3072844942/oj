@@ -3,7 +3,6 @@ package org.oj.server.handler;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.oj.server.dao.PermissionRepository;
 import org.oj.server.dao.UserRepository;
 import org.oj.server.dto.Request;
 import org.oj.server.entity.Permission;
@@ -15,25 +14,27 @@ import org.oj.server.service.PermissionService;
 import org.oj.server.util.IpUtils;
 import org.oj.server.util.JwtUtil;
 import org.oj.server.util.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * 认证过滤器
  */
 @Component
 public class JwtAuthenticationFilter implements HandlerInterceptor {
-    @Autowired
-    private PermissionRepository permissionRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private AuthorizationFilter authorizationFilter;
+    private final UserRepository userRepository;
+    private final AuthorizationFilter authorizationFilter;
 
     private final List<String> swaggerList = Arrays.asList("/v3", "/error", "/favicon.ico", "/webjars", "/doc.html", "/assets");
+
+    public JwtAuthenticationFilter(UserRepository userRepository, AuthorizationFilter authorizationFilter) {
+        this.userRepository = userRepository;
+        this.authorizationFilter = authorizationFilter;
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -76,7 +77,7 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
 
         // swagger允许访问
         if (swaggerList.stream().anyMatch(uri::contains)) {
-            return  true;
+            return true;
         }
         System.out.println(uri);
 

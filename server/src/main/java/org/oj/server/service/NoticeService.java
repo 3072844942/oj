@@ -34,12 +34,15 @@ import java.util.Optional;
  */
 @Service
 public class NoticeService {
-    @Autowired
-    private NoticeRepository noticeRepository;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final NoticeRepository noticeRepository;
+    private final UserService userService;
+    private final MongoTemplate mongoTemplate;
+
+    public NoticeService(NoticeRepository noticeRepository, UserService userService, MongoTemplate mongoTemplate) {
+        this.noticeRepository = noticeRepository;
+        this.userService = userService;
+        this.mongoTemplate = mongoTemplate;
+    }
 
     public NoticeDTO insertOne(NoticeDTO noticeDTO) {
         NoticeDTO.check(noticeDTO);

@@ -30,10 +30,13 @@ import java.util.Map;
 @Service
 public class FacultyService {
     public static final Map<String, Faculty> facultyMap = new HashMap<>();
-    @Autowired
-    private FacultyRepository facultyRepository;
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final FacultyRepository facultyRepository;
+    private final MongoTemplate mongoTemplate;
+
+    public FacultyService(FacultyRepository facultyRepository, MongoTemplate mongoTemplate) {
+        this.facultyRepository = facultyRepository;
+        this.mongoTemplate = mongoTemplate;
+    }
 
     public FacultyVO insertOne(FacultyDTO facultyDTO) {
         WarnException checked = FacultyDTO.check(facultyDTO);

@@ -28,10 +28,13 @@ import java.util.stream.Collectors;
  */
 @Service
 public class CommentService {
-    @Autowired
-    private CommentRepository commentRepository;
-    @Autowired
-    private UserRepository userInfoRepository;
+    private final CommentRepository commentRepository;
+    private final UserRepository userInfoRepository;
+
+    public CommentService(CommentRepository commentRepository, UserRepository userInfoRepository) {
+        this.commentRepository = commentRepository;
+        this.userInfoRepository = userInfoRepository;
+    }
 
     //todo
     public PageVO<CommentVO> find(String articleId) {

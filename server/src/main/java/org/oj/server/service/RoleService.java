@@ -30,10 +30,13 @@ import java.util.stream.Collectors;
  */
 @Service
 public class RoleService {
-    @Autowired
-    private RoleRepository roleRepository;
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final RoleRepository roleRepository;
+    private final MongoTemplate mongoTemplate;
+
+    public RoleService(RoleRepository roleRepository, MongoTemplate mongoTemplate) {
+        this.roleRepository = roleRepository;
+        this.mongoTemplate = mongoTemplate;
+    }
 
     public Map<String, RoleProfileVO> findAllById(Set<String> roleIds) {
         List<Role> allById = roleRepository.findAllById(roleIds);

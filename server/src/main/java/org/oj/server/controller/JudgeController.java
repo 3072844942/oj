@@ -16,8 +16,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Tag(name = "评测接口")
 public class JudgeController extends BaseController {
-    @Autowired
-    private JudgeService judgeService;
+    private final JudgeService judgeService;
+
+    public JudgeController(JudgeService judgeService) {
+        this.judgeService = judgeService;
+    }
 
     @Operation(summary = "评测")
     @PostMapping("judge")

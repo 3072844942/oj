@@ -34,16 +34,19 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 public class JudgeService {
-    @Autowired
-    private ProblemService problemService;
-    @Autowired
-    private ContestService contestService;
-    @Autowired
-    private UploadService uploadService;
-    @Autowired
-    private MongoTemplate mongoTemplate;
-    @Autowired
-    private OJConfig ojConfig;
+    private final ProblemService problemService;
+    private final ContestService contestService;
+    private final UploadService uploadService;
+    private final MongoTemplate mongoTemplate;
+    private final OJConfig ojConfig;
+
+    public JudgeService(ProblemService problemService, ContestService contestService, UploadService uploadService, MongoTemplate mongoTemplate, OJConfig ojConfig) {
+        this.problemService = problemService;
+        this.contestService = contestService;
+        this.uploadService = uploadService;
+        this.mongoTemplate = mongoTemplate;
+        this.ojConfig = ojConfig;
+    }
 
     @Transactional
     public RecordVO judge(JudgeDTO judgeDTO) {

@@ -20,8 +20,11 @@ import java.util.List;
 @RequestMapping("role")
 @Tag(name = "角色接口")
 public class RoleController extends BaseController{
-    @Autowired
-    private RoleService roleService;
+    private final RoleService roleService;
+
+    public RoleController(RoleService roleService) {
+        this.roleService = roleService;
+    }
 
     @Operation(summary = "根据id查找角色")
     @GetMapping("{roleId}")

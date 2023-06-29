@@ -18,8 +18,11 @@ import java.util.List;
 @RequestMapping("article")
 @Tag(name = "文章接口")
 public class ArticleController extends BaseController {
-    @Autowired
-    private ArticleService articleService;
+    private final ArticleService articleService;
+
+    public ArticleController(ArticleService articleService) {
+        this.articleService = articleService;
+    }
 
     @Operation(summary = "根据id查找文章")
     @GetMapping("{articleId}")

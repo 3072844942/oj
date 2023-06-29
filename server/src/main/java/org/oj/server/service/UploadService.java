@@ -22,8 +22,11 @@ import java.io.IOException;
  */
 @Service
 public class UploadService {
-    @Autowired
-    private OJConfig ojConfig;
+    private final OJConfig ojConfig;
+
+    public UploadService(OJConfig ojConfig) {
+        this.ojConfig = ojConfig;
+    }
 
     public String uploadImage(MultipartFile file) {
         return upload(file, FilePathEnum.IMAGE);

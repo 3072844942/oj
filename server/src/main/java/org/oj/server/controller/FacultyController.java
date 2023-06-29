@@ -18,8 +18,11 @@ import java.util.List;
 @RequestMapping("faculty")
 @Tag(name = "学院接口")
 public class FacultyController extends BaseController {
-    @Autowired
-    private FacultyService facultyService;
+    private final FacultyService facultyService;
+
+    public FacultyController(FacultyService facultyService) {
+        this.facultyService = facultyService;
+    }
 
     @Operation(summary = "查找学院列表")
     @GetMapping("list")

@@ -33,16 +33,19 @@ import java.util.stream.Collectors;
  */
 @Service
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private MongoTemplate mongoTemplate;
-    @Autowired
-    private RedisService redisService;
-    @Autowired
-    private RabbitMqService mqService;
-    @Autowired
-    private RoleService roleService;
+    private final UserRepository userRepository;
+    private final MongoTemplate mongoTemplate;
+    private final RedisService redisService;
+    private final RabbitMqService mqService;
+    private final RoleService roleService;
+
+    public UserService(UserRepository userRepository, MongoTemplate mongoTemplate, RedisService redisService, RabbitMqService mqService, RoleService roleService) {
+        this.userRepository = userRepository;
+        this.mongoTemplate = mongoTemplate;
+        this.redisService = redisService;
+        this.mqService = mqService;
+        this.roleService = roleService;
+    }
 
     public String login(UsernamePassword usernamePassword) {
         Optional<User> byUsername = userRepository.findByUsername(usernamePassword.getUsername());

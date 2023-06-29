@@ -19,8 +19,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("user")
 @Tag(name = "用户接口")
 public class UserController extends BaseController {
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @Operation(summary = "用户登陆")
     @PostMapping("login")

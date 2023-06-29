@@ -14,10 +14,13 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class InitConfig implements CommandLineRunner {
-    @Autowired
-    private RoleService roleService;
-    @Autowired
-    private PermissionService permissionService;
+    private final RoleService roleService;
+    private final PermissionService permissionService;
+
+    public InitConfig(RoleService roleService, PermissionService permissionService) {
+        this.roleService = roleService;
+        this.permissionService = permissionService;
+    }
 
     @Override
     public void run(String... args) {

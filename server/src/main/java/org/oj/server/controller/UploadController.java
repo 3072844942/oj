@@ -20,8 +20,11 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("upload")
 @Tag(name = "上传接口")
 public class UploadController extends BaseController {
-    @Autowired
-    private UploadService uploadService;
+    private final UploadService uploadService;
+
+    public UploadController(UploadService uploadService) {
+        this.uploadService = uploadService;
+    }
 
     @Operation(summary = "上传图片")
     @PutMapping("image")

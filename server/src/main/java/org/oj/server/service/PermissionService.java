@@ -30,10 +30,13 @@ public class PermissionService {
      */
     public static final Map<String, Permission> permissionMap = new HashMap<>();
     private final List<String> white = Arrays.asList("/user/login", "/user/register", "/user/send");
-    @Autowired
-    private WebApplicationContext applicationContext;
-    @Autowired
-    private PermissionRepository permissionRepository;
+    private final WebApplicationContext applicationContext;
+    private final PermissionRepository permissionRepository;
+
+    public PermissionService(WebApplicationContext applicationContext, PermissionRepository permissionRepository) {
+        this.applicationContext = applicationContext;
+        this.permissionRepository = permissionRepository;
+    }
 
     /**
      * 加载所有信息

@@ -22,8 +22,11 @@ import java.util.List;
 @RequestMapping("problem")
 @Tag(name = "题目接口")
 public class ProblemController extends BaseController {
-    @Autowired
-    private ProblemService problemService;
+    private final ProblemService problemService;
+
+    public ProblemController(ProblemService problemService) {
+        this.problemService = problemService;
+    }
 
     @Operation(summary = "根据id查找题目")
     @GetMapping("{problemId}")

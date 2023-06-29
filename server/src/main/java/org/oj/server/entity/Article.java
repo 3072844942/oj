@@ -30,21 +30,6 @@ import java.util.List;
 @Document("article")
 @Sync("article")
 public class Article {
-
-    /**
-     * 文章状态
-     */
-    protected EntityStateEnum state;
-    /**
-     * 修改时间
-     */
-    @LastModifiedDate
-    protected Long updateTime;
-    /**
-     * 创建时间
-     */
-    @CreatedDate
-    protected Long creatTime;
     /**
      * id
      */
@@ -82,6 +67,21 @@ public class Article {
      * 是否置顶
      */
     private Boolean isTop;
+
+    /**
+     * 文章状态
+     */
+    protected EntityStateEnum state;
+    /**
+     * 修改时间
+     */
+    @LastModifiedDate
+    protected Long updateTime;
+    /**
+     * 创建时间
+     */
+    @CreatedDate
+    protected Long creatTime;
 
     public static Article of(ArticleDTO articleDTO) {
         Article article = BeanCopyUtils.copyObject(articleDTO, Article.class);

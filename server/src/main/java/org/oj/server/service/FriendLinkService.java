@@ -25,10 +25,13 @@ import java.util.List;
  */
 @Service
 public class FriendLinkService {
-    @Autowired
-    private FriendLinkRepository friendLinkRepository;
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final FriendLinkRepository friendLinkRepository;
+    private final MongoTemplate mongoTemplate;
+
+    public FriendLinkService(FriendLinkRepository friendLinkRepository, MongoTemplate mongoTemplate) {
+        this.friendLinkRepository = friendLinkRepository;
+        this.mongoTemplate = mongoTemplate;
+    }
 
     public FriendLinkVO insertOne(FriendLinkDTO friendLinkDTO) {
         FriendLinkDTO.check(friendLinkDTO);

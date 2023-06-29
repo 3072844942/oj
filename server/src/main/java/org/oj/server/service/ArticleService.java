@@ -34,12 +34,15 @@ import java.util.Optional;
  */
 @Service
 public class ArticleService {
-    @Autowired
-    private ArticleRepository articleRepository;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final ArticleRepository articleRepository;
+    private final UserService userService;
+    private final MongoTemplate mongoTemplate;
+
+    public ArticleService(ArticleRepository articleRepository, UserService userService, MongoTemplate mongoTemplate) {
+        this.articleRepository = articleRepository;
+        this.userService = userService;
+        this.mongoTemplate = mongoTemplate;
+    }
 
     public ArticleDTO insertOne(ArticleDTO articleDTO) {
         ArticleDTO.check(articleDTO);

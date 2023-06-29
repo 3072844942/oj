@@ -32,12 +32,15 @@ import java.util.Optional;
  */
 @Service
 public class ProblemService {
-    @Autowired
-    private ProblemRepository problemRepository;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final ProblemRepository problemRepository;
+    private final UserService userService;
+    private final MongoTemplate mongoTemplate;
+
+    public ProblemService(ProblemRepository problemRepository, UserService userService, MongoTemplate mongoTemplate) {
+        this.problemRepository = problemRepository;
+        this.userService = userService;
+        this.mongoTemplate = mongoTemplate;
+    }
 
     public ProblemDTO insertOne(ProblemDTO problemDTO) {
         ProblemDTO.check(problemDTO);

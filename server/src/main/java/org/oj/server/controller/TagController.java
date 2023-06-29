@@ -18,8 +18,11 @@ import java.util.List;
 @RequestMapping("tag")
 @Tag(name = "标签接口")
 public class TagController extends BaseController {
-    @Autowired
-    private TagService tagService;
+    private final TagService tagService;
+
+    public TagController(TagService tagService) {
+        this.tagService = tagService;
+    }
 
     @Operation(summary = "查找分类列表")
     @GetMapping("list")

@@ -19,8 +19,11 @@ import java.util.List;
 @RequestMapping("contest")
 @Tag(name = "比赛接口")
 public class ContestController extends BaseController {
-    @Autowired
-    private ContestService contestService;
+    private final ContestService contestService;
+
+    public ContestController(ContestService contestService) {
+        this.contestService = contestService;
+    }
 
     @Operation(summary = "根据id查找比赛")
     @GetMapping("{contestId}")
