@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.oj.server.dto.NoticeDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
+import org.self.Sync;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -23,6 +24,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document("notice")
+@Sync("notice")
 public class Notice {
 
     /**

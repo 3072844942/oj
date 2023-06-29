@@ -1,5 +1,6 @@
 package org.oj.server.config;
 
+import com.mongodb.client.model.changestream.FullDocument;
 import org.self.MongoMessageListener;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +19,22 @@ import org.springframework.data.mongodb.core.messaging.MessageListenerContainer;
 public class MongoESConfig implements InitializingBean {
     @Value("${spring.data.mongodb.authentication-database}")
     private String database;
-    @Autowired
-    private MongoMessageListener mongoMessageListener;
-    @Autowired
-    private MessageListenerContainer messageListenerContainer;
+    private final MongoMessageListener mongoMessageListener;
+    private final MessageListenerContainer messageListenerContainer;
+
+    public MongoESConfig(MongoMessageListener mongoMessageListener, MessageListenerContainer messageListenerContainer) {
+        this.mongoMessageListener = mongoMessageListener;
+        this.messageListenerContainer = messageListenerContainer;
+    }
 
     @Override
     public void afterPropertiesSet() {
-        ChangeStreamRequest<Object> request = ChangeStreamRequest.builder(mongoMessageListener).database(database).build();
+        // 监听整个数据库
+        ChangeStreamRequest<Object> request = ChangeStreamRequest
+                .builder(mongoMessageListener)
+                .database(database)
+                .fullDocumentLookup(FullDocument.UPDATE_LOOKUP)
+                .build();
         messageListenerContainer.register(request, Object.class);
     }
 }

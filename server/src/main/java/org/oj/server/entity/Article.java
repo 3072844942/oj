@@ -8,6 +8,7 @@ import org.oj.server.dto.ArticleDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
 import org.oj.server.util.SensitiveUtils;
+import org.self.Sync;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -27,6 +28,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document("article")
+@Sync("article")
 public class Article {
 
     /**

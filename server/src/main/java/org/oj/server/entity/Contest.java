@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.oj.server.dto.ContestDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
+import org.self.Sync;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -26,6 +27,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document("contest")
+@Sync("contest")
 public class Contest {
     /**
      * 比赛ID

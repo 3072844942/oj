@@ -1,8 +1,5 @@
 package org.oj.server.service;
 
-import com.alibaba.excel.EasyExcel;
-import org.apache.poi.xssf.streaming.SXSSFSheet;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.oj.server.config.OJConfig;
 import org.oj.server.constant.HtmlConst;
 import org.oj.server.dao.ContestRepository;
@@ -35,7 +32,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * @author march
