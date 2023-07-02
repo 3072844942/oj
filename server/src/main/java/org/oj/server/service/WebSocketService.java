@@ -5,6 +5,7 @@ import jakarta.websocket.*;
 import jakarta.websocket.server.HandshakeRequest;
 import jakarta.websocket.server.ServerEndpoint;
 import jakarta.websocket.server.ServerEndpointConfig;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dao.ChatRecordRepository;
 import org.oj.server.dto.RecallMessageDTO;
 import org.oj.server.dto.VoiceDTO;
@@ -123,7 +124,7 @@ public class WebSocketService {
      */
     private ChatRecordVO listChatRecords(EndpointConfig endpointConfig) {
         // 获取聊天历史记录
-        List<ChatRecord> chatRecordList = chatRecordRepository.findAll(Sort.by(Sort.Order.desc("updateTime")));
+        List<ChatRecord> chatRecordList = chatRecordRepository.findAll(Sort.by(Sort.Order.desc(MongoConst.UPDATE_TIME)));
         // 获取当前用户ip
         String ipAddress = endpointConfig.getUserProperties().get(ChatConfigurator.HEADER_NAME).toString();
         return ChatRecordVO.builder()

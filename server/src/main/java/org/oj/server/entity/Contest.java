@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.ContestDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
@@ -26,8 +27,8 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("contest")
-@Sync("contest")
+@Document(MongoConst.CONTEST)
+@Sync(MongoConst.CONTEST)
 public class Contest {
     /**
      * 比赛ID

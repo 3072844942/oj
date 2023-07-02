@@ -1,6 +1,7 @@
 package org.oj.server.service;
 
 import org.oj.server.constant.HtmlConst;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dao.NoticeRepository;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.NoticeDTO;
@@ -19,6 +20,7 @@ import org.oj.server.vo.NoticeVO;
 import org.oj.server.vo.PageVO;
 import org.oj.server.vo.UserProfileVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -164,32 +166,33 @@ public class NoticeService {
         // 有读写权限
         if (PermissionUtil.enableRead(EntityStateEnum.DRAFT, "")) {
             // 随意读
-            query.addCriteria(Criteria.where("state").is(EntityStateEnum.valueOf(conditionDTO.getState())));
+            query.addCriteria(Criteria.where(MongoConst.STATE).is(EntityStateEnum.valueOf(conditionDTO.getState())));
         } else {
             EntityStateEnum state = EntityStateEnum.valueOf(conditionDTO.getState());
             // 如果读的不是公开
             if (!state.equals(EntityStateEnum.PUBLIC)) {
                 throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
             } else {
-                query.addCriteria(Criteria.where("state").is(state));
+                query.addCriteria(Criteria.where(MongoConst.STATE).is(state));
             }
         }
 
         // 指定了作者
         if (conditionDTO.getId() != null) {
-            query.addCriteria(Criteria.where("userId").is(conditionDTO.getId()));
+            query.addCriteria(Criteria.where(MongoConst.USER_ID).is(conditionDTO.getId()));
         }
         // 匹配关键字
         String keywords = conditionDTO.getKeywords();
         if (keywords != null) {
             query.addCriteria(new Criteria().orOperator(
-                    Criteria.where("title").regex(keywords),
-                    Criteria.where("content").regex(keywords)
+                    Criteria.where(MongoConst.TITLE).regex(keywords),
+                    Criteria.where(MongoConst.CONTENT).regex(keywords)
             ));
         }
 
         long count = mongoTemplate.count(query, Notice.class);
 
+        query.with(Sort.by(Sort.Order.desc(MongoConst.UPDATE_TIME)));
         query.skip((conditionDTO.getCurrent() - 1L) * conditionDTO.getSize()).limit(conditionDTO.getSize());
         List<Notice> all = mongoTemplate.find(query, Notice.class);
 

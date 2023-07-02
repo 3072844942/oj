@@ -1,6 +1,7 @@
 package org.oj.server.service;
 
 import jakarta.annotation.PostConstruct;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dao.TagRepository;
 import org.oj.server.dao.TagRepository;
 import org.oj.server.dto.TagDTO;
@@ -82,7 +83,7 @@ public class TagService {
         Query query = new Query();
         String keywords = conditionDTO.getKeywords();
         if (keywords != null) {
-            query.addCriteria(Criteria.where("name").regex(keywords));
+            query.addCriteria(Criteria.where(MongoConst.TITLE).regex(keywords));
         }
 
         long count = mongoTemplate.count(query, Tag.class);

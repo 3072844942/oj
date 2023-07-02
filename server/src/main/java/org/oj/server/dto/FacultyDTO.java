@@ -31,7 +31,7 @@ public class FacultyDTO {
     /**
      * 学院描述
      */
-    private String desc;
+    private String content;
 
     public static WarnException check(FacultyDTO facultyDTO) {
         return null;

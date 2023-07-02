@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.FacultyDTO;
 import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.CreatedDate;
@@ -20,9 +21,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("faculty")
+@Document(MongoConst.FACULTY)
 public class Faculty {
-    /**
+    /**`
      * id
      */
     @Id
@@ -36,7 +37,7 @@ public class Faculty {
     /**
      * 学院描述
      */
-    private String desc;
+    private String content;
 
     /**
      * 创建时间

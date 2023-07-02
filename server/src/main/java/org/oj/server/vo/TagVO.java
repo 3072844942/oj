@@ -30,7 +30,7 @@ public class TagVO {
      * 标签
      */
     @Schema(description = "名称")
-    private String name;
+    private String title;
 
     /**
      * 创建时间

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.TagDTO;
 import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.CreatedDate;
@@ -22,7 +23,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("tag")
+@Document(MongoConst.TAG)
 public class Tag {
 
     /**
@@ -34,7 +35,7 @@ public class Tag {
     /**
      * 标签
      */
-    private String name;
+    private String title;
 
     /**
      * 创建时间

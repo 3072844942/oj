@@ -1,5 +1,6 @@
 package org.oj.server.service;
 
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dao.FriendLinkRepository;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.FriendLinkDTO;
@@ -78,9 +79,9 @@ public class FriendLinkService {
         String keywords = conditionDTO.getKeywords();
         if (keywords != null) {
             query.addCriteria(new Criteria().orOperator(
-                    Criteria.where("name").regex(keywords),
-                    Criteria.where("url").regex(keywords),
-                    Criteria.where("desc").regex(keywords)
+                    Criteria.where(MongoConst.TITLE).regex(keywords),
+                    Criteria.where(MongoConst.URL).regex(keywords),
+                    Criteria.where(MongoConst.CONTENT).regex(keywords)
             ));
         }
 

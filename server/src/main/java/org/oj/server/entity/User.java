@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.LoginTypeEnum;
 import org.springframework.data.annotation.CreatedDate;
@@ -24,7 +25,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("user")
+@Document(MongoConst.USER)
 public class User {
 
     /**

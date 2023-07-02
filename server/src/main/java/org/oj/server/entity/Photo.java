@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.enums.EntityStateEnum;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -21,7 +22,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document("photo")
+@Document(MongoConst.PHOTO)
 public class Photo {
 
     /**
@@ -38,12 +39,12 @@ public class Photo {
     /**
      * 照片名
      */
-    private String name;
+    private String title;
 
     /**
      * 照片描述
      */
-    private String desc;
+    private String content;
 
     /**
      * 照片地址

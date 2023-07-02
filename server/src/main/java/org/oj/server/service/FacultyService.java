@@ -1,6 +1,7 @@
 package org.oj.server.service;
 
 import jakarta.annotation.PostConstruct;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dao.FacultyRepository;
 import org.oj.server.dto.FacultyDTO;
 import org.oj.server.dto.ConditionDTO;
@@ -85,8 +86,8 @@ public class FacultyService {
         String keywords = conditionDTO.getKeywords();
         if (keywords != null) {
             query.addCriteria(new Criteria().orOperator(
-                    Criteria.where("desc").regex(keywords),
-                    Criteria.where("title").regex(keywords)
+                    Criteria.where(MongoConst.CONTENT).regex(keywords),
+                    Criteria.where(MongoConst.TITLE).regex(keywords)
             ));
         }
 

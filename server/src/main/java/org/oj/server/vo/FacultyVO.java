@@ -35,7 +35,7 @@ public class FacultyVO {
      * 学院描述
      */
     @Schema(description = "描述")
-    private String desc;
+    private String content;
 
     /**
      * 创建时间

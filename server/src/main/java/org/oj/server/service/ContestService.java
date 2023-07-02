@@ -2,6 +2,7 @@ package org.oj.server.service;
 
 import org.oj.server.config.OJConfig;
 import org.oj.server.constant.HtmlConst;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dao.ContestRepository;
 import org.oj.server.dao.ProblemRepository;
 import org.oj.server.dao.TagRepository;
@@ -21,6 +22,7 @@ import org.oj.server.util.Excel;
 import org.oj.server.util.PermissionUtil;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.*;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -164,36 +166,37 @@ public class ContestService {
         // 有读写权限
         if (PermissionUtil.enableRead(EntityStateEnum.DRAFT, "")) {
             // 随意读
-            query.addCriteria(Criteria.where("state").is(EntityStateEnum.valueOf(conditionDTO.getState())));
+            query.addCriteria(Criteria.where(MongoConst.STATE).is(EntityStateEnum.valueOf(conditionDTO.getState())));
         } else {
             EntityStateEnum state = EntityStateEnum.valueOf(conditionDTO.getState());
             // 如果读的不是公开
             if (!state.equals(EntityStateEnum.PUBLIC)) {
                 throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
             } else {
-                query.addCriteria(Criteria.where("state").is(state));
+                query.addCriteria(Criteria.where(MongoConst.STATE).is(state));
             }
         }
 
         // 指定了作者
         if (conditionDTO.getId() != null) {
-            query.addCriteria(Criteria.where("userId").is(conditionDTO.getId()));
+            query.addCriteria(Criteria.where(MongoConst.USER_ID).is(conditionDTO.getId()));
         }
         // 匹配关键字
         String keywords = conditionDTO.getKeywords();
         if (keywords != null) {
             query.addCriteria(new Criteria().orOperator(
-                    Criteria.where("title").regex(keywords),
-                    Criteria.where("content").regex(keywords),
-                    Criteria.where("categoryId").is(keywords)
+                    Criteria.where(MongoConst.TITLE).regex(keywords),
+                    Criteria.where(MongoConst.CONTENT).regex(keywords),
+                    Criteria.where(MongoConst.CATEGORY_ID).is(keywords)
             ));
         }
         if (conditionDTO.getTags() != null && conditionDTO.getTags().size() != 0) {
-            query.addCriteria(Criteria.where("tagIds").in(conditionDTO.getTags()));
+            query.addCriteria(Criteria.where(MongoConst.TAG_ID).in(conditionDTO.getTags()));
         }
 
         long count = mongoTemplate.count(query, Contest.class);
 
+        query.with(Sort.by(Sort.Order.desc(MongoConst.START_TIME)));
         query.skip((conditionDTO.getCurrent() - 1L) * conditionDTO.getSize()).limit(conditionDTO.getSize());
         List<Contest> all = mongoTemplate.find(query, Contest.class);
 

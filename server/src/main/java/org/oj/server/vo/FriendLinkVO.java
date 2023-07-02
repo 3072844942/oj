@@ -28,7 +28,7 @@ public class FriendLinkVO {
      * 链接名
      */
     @Schema(description = "名称")
-    private String name;
+    private String title;
 
     /**
      * 链接头像
@@ -46,7 +46,7 @@ public class FriendLinkVO {
      * 介绍
      */
     @Schema(description = "介绍")
-    private String desc;
+    private String content;
 
     /**
      * 创建时间

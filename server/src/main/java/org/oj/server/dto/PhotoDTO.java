@@ -29,12 +29,12 @@ public class PhotoDTO {
     /**
      * 照片名
      */
-    private String name;
+    private String title;
 
     /**
      * 照片描述
      */
-    private String desc;
+    private String content;
 
     /**
      * 照片地址

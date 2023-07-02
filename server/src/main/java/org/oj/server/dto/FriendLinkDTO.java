@@ -33,7 +33,7 @@ public class FriendLinkDTO {
      * 链接名
      */
     @Schema(description = "链接名")
-    private String name;
+    private String title;
 
     /**
      * 链接头像
@@ -51,13 +51,13 @@ public class FriendLinkDTO {
      * 介绍
      */
     @Schema(description = "介绍")
-    private String desc;
+    private String content;
 
     public static void check(FriendLinkDTO friendLinkDTO) {
-        if (!StringUtils.isSpecifiedLength(friendLinkDTO.getName(), 0, 20)) {
+        if (!StringUtils.isSpecifiedLength(friendLinkDTO.getTitle(), 0, 20)) {
             throw new WarnException("名称长度超限");
         }
-        if (!StringUtils.isSpecifiedLength(friendLinkDTO.getDesc(), 0, 1000)) {
+        if (!StringUtils.isSpecifiedLength(friendLinkDTO.getContent(), 0, 1000)) {
             throw new WarnException("描述长度超限");
         }
     }

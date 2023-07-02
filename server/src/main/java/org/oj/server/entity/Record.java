@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.JudgeStateEnum;
 import org.springframework.data.annotation.CreatedDate;
@@ -20,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("record")
+@Document(MongoConst.RECORD)
 public class Record {
     /**
      * id

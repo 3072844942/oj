@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.RoleDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.PermissionEnum;
@@ -27,7 +28,7 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("role")
+@Document(MongoConst.ROLE)
 public class Role {
 
     /**

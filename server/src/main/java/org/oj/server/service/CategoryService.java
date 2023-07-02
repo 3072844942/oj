@@ -1,6 +1,7 @@
 package org.oj.server.service;
 
 import jakarta.annotation.PostConstruct;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dao.CategoryRepository;
 import org.oj.server.dto.CategoryDTO;
 import org.oj.server.dto.ConditionDTO;
@@ -78,7 +79,7 @@ public class CategoryService {
         Query query = new Query();
         String keywords = conditionDTO.getKeywords();
         if (keywords != null) {
-            query.addCriteria(Criteria.where("title").regex(keywords));
+            query.addCriteria(Criteria.where(MongoConst.TITLE).regex(keywords));
         }
 
         long count = mongoTemplate.count(query, Category.class);

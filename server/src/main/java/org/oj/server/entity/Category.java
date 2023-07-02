@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.CategoryDTO;
 import org.oj.server.util.BeanCopyUtils;
 import org.oj.server.util.SensitiveUtils;
@@ -21,7 +22,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("category")
+@Document(MongoConst.CATEGORY)
 public class Category {
 
     /**
