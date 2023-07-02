@@ -2,6 +2,8 @@ package org.oj.server.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.oj.server.annotation.OptLog;
+import org.oj.server.constant.OptTypeConst;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.UserInfoDTO;
 import org.oj.server.dto.UsernamePassword;
@@ -38,6 +40,7 @@ public class UserController extends BaseController {
         return ok();
     }
 
+    @OptLog(optType = OptTypeConst.SAVE)
     @Operation(summary = "注册")
     @PostMapping("register")
     public Object register(@RequestBody UsernamePassword usernamePassword) {
@@ -50,6 +53,7 @@ public class UserController extends BaseController {
         return ok(userService.forget(usernamePassword));
     }
 
+    @OptLog(optType = OptTypeConst.UPDATE)
     @Operation(summary = "修改信息")
     @PatchMapping("update")
     public Object updateOne(@RequestBody UserInfoDTO userInfoDTO) {

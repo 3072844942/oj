@@ -2,10 +2,10 @@ package org.oj.server.service;
 
 import org.oj.server.constant.HtmlConst;
 import org.oj.server.dao.ProblemRepository;
+import org.oj.server.dao.TagRepository;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.ProblemDTO;
 import org.oj.server.dto.Request;
-import org.oj.server.entity.Article;
 import org.oj.server.entity.Problem;
 import org.oj.server.entity.ProblemExample;
 import org.oj.server.entity.User;
@@ -16,7 +16,6 @@ import org.oj.server.exception.WarnException;
 import org.oj.server.util.PermissionUtil;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -35,11 +34,13 @@ public class ProblemService {
     private final ProblemRepository problemRepository;
     private final UserService userService;
     private final MongoTemplate mongoTemplate;
+    private final TagRepository tagRepository;
 
-    public ProblemService(ProblemRepository problemRepository, UserService userService, MongoTemplate mongoTemplate) {
+    public ProblemService(ProblemRepository problemRepository, UserService userService, MongoTemplate mongoTemplate, TagRepository tagRepository) {
         this.problemRepository = problemRepository;
         this.userService = userService;
         this.mongoTemplate = mongoTemplate;
+        this.tagRepository = tagRepository;
     }
 
     public ProblemDTO insertOne(ProblemDTO problemDTO) {
@@ -87,11 +88,13 @@ public class ProblemService {
 
         Problem problem = byId.get();
         problem.setUserId(Request.user.get().getId());
-        if (problemDTO.getTagIds() != null && problemDTO.getTagIds().size() != 0) problem.setTagIds(problemDTO.getTagIds());
+        if (problemDTO.getTagIds() != null && problemDTO.getTagIds().size() != 0)
+            problem.setTagIds(problemDTO.getTagIds());
         if (StringUtils.isPresent(problemDTO.getTitle())) problem.setTitle(problemDTO.getTitle());
         if (StringUtils.isPresent(problemDTO.getContent())) problem.setContent(problemDTO.getContent());
         if (StringUtils.isPresent(problemDTO.getInputContent())) problem.setInputContent(problemDTO.getInputContent());
-        if (StringUtils.isPresent(problemDTO.getOutputContent())) problem.setOutputContent(problemDTO.getOutputContent());
+        if (StringUtils.isPresent(problemDTO.getOutputContent()))
+            problem.setOutputContent(problemDTO.getOutputContent());
         if (problemDTO.getExamples() != null && problemDTO.getExamples().size() != 0)
             problem.setExamples(problemDTO.getExamples().stream().map(ProblemExample::of).toList());
         if (StringUtils.isPresent(problemDTO.getIntro())) problem.setIntro(problem.getIntro());
@@ -156,7 +159,7 @@ public class ProblemService {
 
         // 设置标签
         problemVO.setTags(
-                problem.getTagIds().stream().map(tagId -> TagVO.of(TagService.tagMap.get(tagId))).toList()
+                tagRepository.findAllById(problem.getTagIds()).stream().map(TagVO::of).toList()
         );
         problemVO.setAuthor(UserProfileVO.of(userService.findById(problem.getUserId())));
 
@@ -263,7 +266,7 @@ public class ProblemService {
 
                     problemSearchDTO.setAuthor(UserProfileVO.of(infoMap.get(a.getUserId())));
                     problemSearchDTO.setTags(
-                            a.getTagIds().stream().map(tagId -> TagVO.of(TagService.tagMap.get(tagId))).toList()
+                            tagRepository.findAllById(a.getTagIds()).stream().map(TagVO::of).toList()
                     );
                     return problemSearchDTO;
                 })

@@ -1,6 +1,5 @@
 package org.oj.server.util;
 
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
@@ -39,7 +38,7 @@ public class Excel implements AutoCloseable {
         if (collect.size() > MAX_ROW_SIZE) {
             workbook.removeSheetAt(workbook.getSheetIndex(sheetName));
 
-            for (int current = 1; (current - 1) * MAX_ROW_SIZE < collect.size(); current ++ ) {
+            for (int current = 1; (current - 1) * MAX_ROW_SIZE < collect.size(); current++) {
                 String newSheetName = sheetName + "_" + current;
                 addSheet(newSheetName, headers, collect.subList(MAX_ROW_SIZE * (current - 1), Math.min(MAX_ROW_SIZE * current, collect.size())));
                 current++;

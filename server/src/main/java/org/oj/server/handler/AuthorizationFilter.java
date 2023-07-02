@@ -32,7 +32,7 @@ public class AuthorizationFilter {
         this.roleRepository = roleRepository;
     }
 
-    public boolean doFilterInternal(HttpServletRequest request, HttpServletResponse response, Permission permission) throws ServletException, IOException {
+    public boolean doFilterInternal(HttpServletRequest request, HttpServletResponse response, Permission permission) {
         User userAuth = Request.user.get();
         List<String> roleIds = userAuth.getRoleIds();
 

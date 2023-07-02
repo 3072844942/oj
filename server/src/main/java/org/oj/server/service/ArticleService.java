@@ -3,10 +3,13 @@ package org.oj.server.service;
 import org.bson.types.ObjectId;
 import org.oj.server.constant.HtmlConst;
 import org.oj.server.dao.ArticleRepository;
+import org.oj.server.dao.CategoryRepository;
+import org.oj.server.dao.TagRepository;
 import org.oj.server.dto.ArticleDTO;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.Request;
 import org.oj.server.entity.Article;
+import org.oj.server.entity.Tag;
 import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
@@ -15,7 +18,6 @@ import org.oj.server.exception.WarnException;
 import org.oj.server.util.PermissionUtil;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -37,11 +39,15 @@ public class ArticleService {
     private final ArticleRepository articleRepository;
     private final UserService userService;
     private final MongoTemplate mongoTemplate;
+    private final TagRepository tagRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ArticleService(ArticleRepository articleRepository, UserService userService, MongoTemplate mongoTemplate) {
+    public ArticleService(ArticleRepository articleRepository, UserService userService, MongoTemplate mongoTemplate, TagRepository tagRepository, CategoryRepository categoryRepository) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.mongoTemplate = mongoTemplate;
+        this.tagRepository = tagRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     public ArticleDTO insertOne(ArticleDTO articleDTO) {
@@ -92,7 +98,8 @@ public class ArticleService {
 
         Article article = byId.get();
         article.setUserId(Request.user.get().getId());
-        if (articleDTO.getTagIds() != null && articleDTO.getTagIds().size() != 0) article.setTagIds(articleDTO.getTagIds());
+        if (articleDTO.getTagIds() != null && articleDTO.getTagIds().size() != 0)
+            article.setTagIds(articleDTO.getTagIds());
         if (StringUtils.isPresent(articleDTO.getCategoryId())) article.setCategoryId(articleDTO.getCategoryId());
         if (StringUtils.isPresent(articleDTO.getCover())) article.setCover(articleDTO.getCover());
         if (StringUtils.isPresent(articleDTO.getTitle())) article.setTitle(articleDTO.getTitle());
@@ -166,9 +173,10 @@ public class ArticleService {
         articleVO.setNewesList(newList.map(ArticleRecommendVO::of).toList());
 
         // 设置标签
-        articleVO.setCategory(CategoryVO.of(CategoryService.categoryMap.get(article.getCategoryId())));
+        articleVO.setCategory(CategoryVO.of(categoryRepository.findById(article.getCategoryId()).get()));
+        List<Tag> allById = tagRepository.findAllById(article.getTagIds());
         articleVO.setTags(
-                article.getTagIds().stream().map(tagId -> TagVO.of(TagService.tagMap.get(tagId))).toList()
+                allById.stream().map(TagVO::of).toList()
         );
         articleVO.setAuthor(UserProfileVO.of(userService.findById(article.getUserId())));
 
@@ -190,6 +198,16 @@ public class ArticleService {
     }
 
     public PageVO<ArticleSearchVO> find(ConditionDTO conditionDTO) {
+//        elasticsearchOperations.search(new BaseQuery(), Article.class);
+        // 构建一个原生搜索查询
+//        NativeQuery build = new NativeQueryBuilder()
+//                .withQuery(Queries.termQueryAsQuery("ad", "asd"))
+//                .build();
+//        elasticsearchOperations.search(, Article.class);
+        return findInMongoDB(conditionDTO);
+    }
+
+    private PageVO<ArticleSearchVO> findInMongoDB(ConditionDTO conditionDTO) {
         ConditionDTO.check(conditionDTO);
 
         // 查询条件
@@ -261,10 +279,11 @@ public class ArticleService {
                     ArticleSearchVO articleSearchDTO = ArticleSearchVO.of(a);
 
                     articleSearchDTO.setAuthor(UserProfileVO.of(infoMap.get(a.getUserId())));
+                    articleSearchDTO.setCategory(CategoryVO.of(categoryRepository.findById(a.getCategoryId()).get()));
+                    List<Tag> allById = tagRepository.findAllById(a.getTagIds());
                     articleSearchDTO.setTags(
-                            a.getTagIds().stream().map(tagId -> TagVO.of(TagService.tagMap.get(tagId))).toList()
+                            allById.stream().map(TagVO::of).toList()
                     );
-                    articleSearchDTO.setCategory(CategoryVO.of(CategoryService.categoryMap.get(a.getCategoryId())));
                     return articleSearchDTO;
                 })
                 .toList();

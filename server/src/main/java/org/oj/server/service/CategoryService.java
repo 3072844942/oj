@@ -26,7 +26,6 @@ import java.util.Map;
  */
 @Service
 public class CategoryService {
-    public static final Map<String, Category> categoryMap = new HashMap<>();
     private final CategoryRepository categoryRepository;
     private final MongoTemplate mongoTemplate;
 
@@ -50,7 +49,6 @@ public class CategoryService {
 
         Category category = Category.of(categoryDTO);
         category = categoryRepository.insert(category);
-        categoryMap.put(category.getId(), category);
 
         return CategoryVO.of(category);
     }
@@ -62,7 +60,6 @@ public class CategoryService {
         }
 
         categoryRepository.deleteAllById(ids);
-        ids.forEach(categoryMap::remove);
     }
 
     public void deleteOne(String id) {
@@ -72,7 +69,6 @@ public class CategoryService {
         }
 
         categoryRepository.deleteById(id);
-        categoryMap.remove(id);
     }
 
     public PageVO<CategoryVO> find(ConditionDTO conditionDTO) {
@@ -105,15 +101,7 @@ public class CategoryService {
 
         Category category = Category.of(categoryDTO);
         category = categoryRepository.insert(category);
-        categoryMap.put(category.getId(), category);
 
         return CategoryDTO.of(category);
-    }
-
-    @PostConstruct
-    private void init() {
-        // 预读取所有分类， 减少查询时间
-        List<Category> all = categoryRepository.findAll();
-        all.forEach(category -> categoryMap.put(category.getId(), category));
     }
 }

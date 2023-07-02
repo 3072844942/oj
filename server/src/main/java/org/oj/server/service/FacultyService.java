@@ -29,7 +29,6 @@ import java.util.Map;
  */
 @Service
 public class FacultyService {
-    public static final Map<String, Faculty> facultyMap = new HashMap<>();
     private final FacultyRepository facultyRepository;
     private final MongoTemplate mongoTemplate;
 
@@ -56,7 +55,6 @@ public class FacultyService {
 
         Faculty faculty = Faculty.of(facultyDTO);
         faculty = facultyRepository.insert(faculty);
-        facultyMap.put(faculty.getId(), faculty);
 
         return FacultyVO.of(faculty);
     }
@@ -68,7 +66,6 @@ public class FacultyService {
         }
 
         facultyRepository.deleteAllById(ids);
-        ids.forEach(facultyMap::remove);
     }
 
     public void deleteOne(String id) {
@@ -78,7 +75,6 @@ public class FacultyService {
         }
 
         facultyRepository.deleteById(id);
-        facultyMap.remove(id);
     }
 
     public PageVO<FacultyVO> find(ConditionDTO conditionDTO) {
@@ -117,15 +113,7 @@ public class FacultyService {
 
         Faculty faculty = Faculty.of(facultyDTO);
         faculty = facultyRepository.insert(faculty);
-        facultyMap.put(faculty.getId(), faculty);
 
         return FacultyDTO.of(faculty);
-    }
-
-    @PostConstruct
-    private void init() {
-        // 预读取所有分类， 减少查询时间
-        List<Faculty> all = facultyRepository.findAll();
-        all.forEach(faculty -> facultyMap.put(faculty.getId(), faculty));
     }
 }

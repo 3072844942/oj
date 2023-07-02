@@ -3,6 +3,7 @@ package org.oj.server.handler;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.oj.server.dao.PermissionRepository;
 import org.oj.server.dao.UserRepository;
 import org.oj.server.dto.Request;
 import org.oj.server.entity.Permission;
@@ -10,7 +11,6 @@ import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
-import org.oj.server.service.PermissionService;
 import org.oj.server.util.IpUtils;
 import org.oj.server.util.JwtUtil;
 import org.oj.server.util.StringUtils;
@@ -28,16 +28,18 @@ import java.util.Optional;
 public class JwtAuthenticationFilter implements HandlerInterceptor {
     private final UserRepository userRepository;
     private final AuthorizationFilter authorizationFilter;
+    private final PermissionRepository permissionRepository;
 
     private final List<String> swaggerList = Arrays.asList("/v3", "/error", "/favicon.ico", "/webjars", "/doc.html", "/assets");
 
-    public JwtAuthenticationFilter(UserRepository userRepository, AuthorizationFilter authorizationFilter) {
+    public JwtAuthenticationFilter(UserRepository userRepository, AuthorizationFilter authorizationFilter, PermissionRepository permissionRepository) {
         this.userRepository = userRepository;
         this.authorizationFilter = authorizationFilter;
+        this.permissionRepository = permissionRepository;
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         // 解析token
         String token = request.getHeader("token");
         if (StringUtils.isPresent(token)) {
@@ -63,13 +65,13 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
             if (user.getState().equals(EntityStateEnum.DELETE)) {
                 throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
             }
-            Request.user.set(user);
 
             // 更新用户信息
             String ipAddress = IpUtils.getIpAddress(request);
             user.setIpAddress(ipAddress);
             user.setIpSource(IpUtils.getIpSource(ipAddress));
             userRepository.save(user);
+            Request.user.set(user);
         }
 
         // 请求路由
@@ -79,13 +81,12 @@ public class JwtAuthenticationFilter implements HandlerInterceptor {
         if (swaggerList.stream().anyMatch(uri::contains)) {
             return true;
         }
-        System.out.println(uri);
-
-        if (!PermissionService.permissionMap.containsKey(uri)) {
+        Optional<Permission> byUrl = permissionRepository.findByUrl(uri);
+        if (byUrl.isEmpty()) {
             throw new ErrorException("请求路径错误：" + uri);
         }
 
-        Permission permission = PermissionService.permissionMap.get(uri);
+        Permission permission = byUrl.get();
         // 允许匿名访问
         if (permission.getIsAnonymous()) {
             // 放行

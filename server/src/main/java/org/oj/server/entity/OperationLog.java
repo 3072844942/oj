@@ -12,24 +12,61 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
 /**
- * 聊天记录
- *
- * @author bin
- * @date 2021/07/29
+ * @author march
+ * @since 2023/7/2 下午3:44
  */
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@Document("chat_record")
-public class ChatRecord {
-
+@AllArgsConstructor
+@Document("log")
+public class OperationLog {
 
     /**
-     * 主键
+     * 日志id
      */
     @Id
     private String id;
+
+    /**
+     * 操作模块
+     */
+    private String optModule;
+
+    /**
+     * 操作路径
+     */
+    private String optUrl;
+
+    /**
+     * 操作类型
+     */
+    private String optType;
+
+    /**
+     * 操作方法
+     */
+    private String optMethod;
+
+    /**
+     * 操作描述
+     */
+    private String optDesc;
+
+    /**
+     * 请求方式
+     */
+    private String requestMethod;
+
+    /**
+     * 请求参数
+     */
+    private String requestParam;
+
+    /**
+     * 返回数据
+     */
+    private String responseData;
 
     /**
      * 用户id
@@ -40,21 +77,6 @@ public class ChatRecord {
      * 用户昵称
      */
     private String nickname;
-
-    /**
-     * 用户头像
-     */
-    private String avatar;
-
-    /**
-     * 聊天内容
-     */
-    private String content;
-
-    /**
-     * 类型
-     */
-    private Integer type;
 
     /**
      * 用户登录ip

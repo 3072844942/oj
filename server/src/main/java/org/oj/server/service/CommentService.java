@@ -15,7 +15,6 @@ import org.oj.server.util.StringUtils;
 import org.oj.server.vo.CommentVO;
 import org.oj.server.vo.PageVO;
 import org.oj.server.vo.UserProfileVO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +35,6 @@ public class CommentService {
         this.userInfoRepository = userInfoRepository;
     }
 
-    //todo
     public PageVO<CommentVO> find(String articleId) {
         Comment comment = Comment.builder()
                 .articleId(articleId)

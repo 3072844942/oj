@@ -2,6 +2,8 @@ package org.oj.server.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.oj.server.annotation.OptLog;
+import org.oj.server.constant.OptTypeConst;
 import org.oj.server.dto.NoticeDTO;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.service.NoticeService;
@@ -36,18 +38,21 @@ public class NoticeController extends BaseController {
         return ok(noticeService.find(conditionDTO));
     }
 
+    @OptLog(optType = OptTypeConst.UPDATE)
     @Operation(summary = "更新公告")
     @PatchMapping("update")
     public Object updateOne(@RequestBody NoticeDTO noticeDTO) {
         return ok(noticeService.updateOne(noticeDTO));
     }
 
+    @OptLog(optType = OptTypeConst.SAVE)
     @Operation(summary = "添加公告")
     @PutMapping("add")
     public Object insertOne(@RequestBody NoticeDTO noticeDTO) {
         return ok(noticeService.insertOne(noticeDTO));
     }
 
+    @OptLog(optType = OptTypeConst.REMOVE)
     @Operation(summary = "删除公告")
     @DeleteMapping("delete/{noticeId}")
     public Object deleteOne(@PathVariable String noticeId) {
@@ -55,6 +60,7 @@ public class NoticeController extends BaseController {
         return ok();
     }
 
+    @OptLog(optType = OptTypeConst.REMOVE)
     @Operation(summary = "批量删除公告")
     @DeleteMapping("delete/list")
     public Object delete(@RequestBody List<String> ids) {

@@ -1,6 +1,6 @@
 package org.oj.server.service;
 
-import jakarta.annotation.PostConstruct;
+import org.oj.server.dao.PermissionRepository;
 import org.oj.server.dao.RoleRepository;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.RoleDTO;
@@ -14,8 +14,6 @@ import org.oj.server.util.StringUtils;
 import org.oj.server.vo.PageVO;
 import org.oj.server.vo.RoleProfileVO;
 import org.oj.server.vo.RoleVO;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -32,10 +30,12 @@ import java.util.stream.Collectors;
 public class RoleService {
     private final RoleRepository roleRepository;
     private final MongoTemplate mongoTemplate;
+    private final PermissionRepository permissionRepository;
 
-    public RoleService(RoleRepository roleRepository, MongoTemplate mongoTemplate) {
+    public RoleService(RoleRepository roleRepository, MongoTemplate mongoTemplate, PermissionRepository permissionRepository) {
         this.roleRepository = roleRepository;
         this.mongoTemplate = mongoTemplate;
+        this.permissionRepository = permissionRepository;
     }
 
     public Map<String, RoleProfileVO> findAllById(Set<String> roleIds) {
@@ -45,7 +45,7 @@ public class RoleService {
 
     public void init() {
         // todo menuList
-        Collection<Permission> values = PermissionService.permissionMap.values();
+        Collection<Permission> values = permissionRepository.findAll();
         Map<String, PermissionEnum> all = new HashMap<>();
         values.forEach(i -> all.put(i.getId(), PermissionEnum.WRITE));
 

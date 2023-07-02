@@ -2,6 +2,8 @@ package org.oj.server.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.oj.server.annotation.OptLog;
+import org.oj.server.constant.OptTypeConst;
 import org.oj.server.dto.ContestDTO;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.service.ContestService;
@@ -49,6 +51,7 @@ public class ContestController extends BaseController {
         return ok(contestService.find(conditionDTO));
     }
 
+    @OptLog(optType = OptTypeConst.UPDATE)
     @Operation(summary = "更新比赛")
     @PatchMapping("update")
     public Object updateOne(@RequestBody ContestDTO contestDTO) {
@@ -60,6 +63,7 @@ public class ContestController extends BaseController {
         return ok(contestService.signUp(contestId));
     }
 
+    @OptLog(optType = OptTypeConst.SAVE)
     @Operation(summary = "添加比赛")
     @PutMapping("add")
     public Object insertOne(@RequestBody ContestDTO contestDTO) {
@@ -80,6 +84,7 @@ public class ContestController extends BaseController {
         return ok();
     }
 
+    @OptLog(optType = OptTypeConst.EXPORT)
     @Operation(summary = "导出成绩")
     @GetMapping("export/{contestId}")
     public Object export(@PathVariable String contestId){

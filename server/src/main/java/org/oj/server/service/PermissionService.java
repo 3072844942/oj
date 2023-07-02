@@ -24,11 +24,6 @@ import java.util.*;
 @Log4j2
 @Service
 public class PermissionService {
-    /**
-     * 权限集合
-     * url - permission
-     */
-    public static final Map<String, Permission> permissionMap = new HashMap<>();
     private final List<String> white = Arrays.asList("/user/login", "/user/register", "/user/send");
     private final WebApplicationContext applicationContext;
     private final PermissionRepository permissionRepository;
@@ -104,9 +99,5 @@ public class PermissionService {
                 permissionRepository.save(p);
             }
         }
-
-        // 预加载
-        List<Permission> all = permissionRepository.findAll();
-        all.forEach(permission -> PermissionService.permissionMap.put(permission.getUrl(), permission));
     }
 }

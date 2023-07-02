@@ -4,6 +4,7 @@ import org.oj.server.config.OJConfig;
 import org.oj.server.constant.HtmlConst;
 import org.oj.server.dao.ContestRepository;
 import org.oj.server.dao.ProblemRepository;
+import org.oj.server.dao.TagRepository;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.ContestDTO;
 import org.oj.server.dto.Request;
@@ -20,7 +21,6 @@ import org.oj.server.util.Excel;
 import org.oj.server.util.PermissionUtil;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -44,13 +44,15 @@ public class ContestService {
     private final ProblemRepository problemRepository;
     private final MongoTemplate mongoTemplate;
     private final OJConfig ojConfig;
+    private final TagRepository tagRepository;
 
-    public ContestService(ContestRepository contestRepository, UserService userService, ProblemRepository problemRepository, MongoTemplate mongoTemplate, OJConfig ojConfig) {
+    public ContestService(ContestRepository contestRepository, UserService userService, ProblemRepository problemRepository, MongoTemplate mongoTemplate, OJConfig ojConfig, TagRepository tagRepository) {
         this.contestRepository = contestRepository;
         this.userService = userService;
         this.problemRepository = problemRepository;
         this.mongoTemplate = mongoTemplate;
         this.ojConfig = ojConfig;
+        this.tagRepository = tagRepository;
     }
 
     public ContestInfoVO findOne(String contestId) {
@@ -71,8 +73,8 @@ public class ContestService {
 
             contestInfoVO.setProblems(problems.stream().map(problem -> {
                 ProblemVO problemVO = ProblemVO.of(problem);
-                problemVO.setTags(problem.getTagIds().stream()
-                        .map(tagId -> TagVO.of(TagService.tagMap.get(tagId))).toList());
+                problemVO.setTags(tagRepository.findAllById(problem.getTagIds()).stream()
+                        .map(TagVO::of).toList());
                 problemVO.setExamples(problem.getExamples().stream().map(ProblemExampleVO::of).toList());
                 return problemVO;
             }).toList());
@@ -149,7 +151,7 @@ public class ContestService {
         List<String> ids = contest.getUserIds().subList(frontIndex, conditionDTO.getSize());
 
         return new PageVO<>(
-                ids.stream().map(id -> userService.findById(id)).toList(),
+                ids.stream().map(userService::findById).toList(),
                 (long) contest.getUserIds().size()
         );
     }

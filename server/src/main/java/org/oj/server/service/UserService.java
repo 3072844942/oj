@@ -1,11 +1,11 @@
 package org.oj.server.service;
 
 import org.oj.server.constant.RedisPrefixConst;
+import org.oj.server.dao.FacultyRepository;
 import org.oj.server.dao.UserRepository;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.UserInfoDTO;
 import org.oj.server.dto.UsernamePassword;
-import org.oj.server.entity.Article;
 import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.LoginTypeEnum;
@@ -14,10 +14,8 @@ import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
 import org.oj.server.util.EncryptionUtil;
 import org.oj.server.util.JwtUtil;
-import org.oj.server.util.PermissionUtil;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -38,13 +36,15 @@ public class UserService {
     private final RedisService redisService;
     private final RabbitMqService mqService;
     private final RoleService roleService;
+    private final FacultyRepository facultyRepository;
 
-    public UserService(UserRepository userRepository, MongoTemplate mongoTemplate, RedisService redisService, RabbitMqService mqService, RoleService roleService) {
+    public UserService(UserRepository userRepository, MongoTemplate mongoTemplate, RedisService redisService, RabbitMqService mqService, RoleService roleService, FacultyRepository facultyRepository) {
         this.userRepository = userRepository;
         this.mongoTemplate = mongoTemplate;
         this.redisService = redisService;
         this.mqService = mqService;
         this.roleService = roleService;
+        this.facultyRepository = facultyRepository;
     }
 
     public String login(UsernamePassword usernamePassword) {
@@ -166,7 +166,7 @@ public class UserService {
 
         User userInfo = byId.get();
         UserVO of = UserVO.of(userInfo);
-        of.setFaculty(FacultyVO.of(FacultyService.facultyMap.get(userInfo.getFacultyId())));
+        of.setFaculty(FacultyVO.of(facultyRepository.findById(userInfo.getFacultyId()).get()));
         return of;
     }
 

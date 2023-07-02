@@ -30,7 +30,6 @@ import java.util.Map;
  */
 @Service
 public class TagService {
-    public static final Map<String, Tag> tagMap = new HashMap<>();
     private final TagRepository tagRepository;
     private final MongoTemplate mongoTemplate;
 
@@ -54,7 +53,6 @@ public class TagService {
 
         Tag tag = Tag.of(tagDTO);
         tag = tagRepository.insert(tag);
-        tagMap.put(tag.getId(), tag);
 
         return TagVO.of(tag);
     }
@@ -66,7 +64,6 @@ public class TagService {
         }
 
         tagRepository.deleteAllById(ids);
-        ids.forEach(tagMap::remove);
     }
 
     public void deleteOne(String id) {
@@ -76,7 +73,6 @@ public class TagService {
         }
 
         tagRepository.deleteById(id);
-        tagMap.remove(id);
     }
 
     public PageVO<TagVO> find(ConditionDTO conditionDTO) {
@@ -109,16 +105,7 @@ public class TagService {
 
         Tag tag = Tag.of(tagDTO);
         tag = tagRepository.insert(tag);
-        tagMap.put(tag.getId(), tag);
 
         return TagDTO.of(tag);
-    }
-
-
-    @PostConstruct
-    public void init() {
-        // 预加载
-        List<Tag> all = tagRepository.findAll();
-        all.forEach(tag -> tagMap.put(tag.getId(), tag));
     }
 }

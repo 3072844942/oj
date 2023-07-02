@@ -2,6 +2,8 @@ package org.oj.server.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.oj.server.annotation.OptLog;
+import org.oj.server.constant.OptTypeConst;
 import org.oj.server.dto.ProblemDTO;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.service.ProblemService;
@@ -40,19 +42,21 @@ public class ProblemController extends BaseController {
         return ok(problemService.find(conditionDTO));
     }
 
+    @OptLog(optType = OptTypeConst.UPDATE)
     @Operation(summary = "更新题目")
     @PatchMapping("update")
     public Object updateOne(@RequestBody ProblemDTO problemDTO) {
         return ok(problemService.updateOne(problemDTO));
     }
 
-
+    @OptLog(optType = OptTypeConst.SAVE)
     @Operation(summary = "添加题目")
     @PutMapping("add")
     public Object insertOne(@RequestBody ProblemDTO problemDTO) {
         return ok(problemService.insertOne(problemDTO));
     }
 
+    @OptLog(optType = OptTypeConst.REMOVE)
     @Operation(summary = "删除题目")
     @DeleteMapping("delete/{problemId}")
     public Object deleteOne(@PathVariable String problemId) {
@@ -60,6 +64,7 @@ public class ProblemController extends BaseController {
         return ok();
     }
 
+    @OptLog(optType = OptTypeConst.REMOVE)
     @Operation(summary = "批量删除题目")
     @DeleteMapping("delete/list")
     public Object delete(@RequestBody List<String> ids) {
