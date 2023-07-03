@@ -52,7 +52,8 @@
 
 ![image-20230607084319264](assets/image-20230607084319264.png)
 
+#### JudgeJNIService
 
+[https://blog.csdn.net/lj402159806/article/details/86169807](https://blog.csdn.net/lj402159806/article/details/86169807)
 
-#### WebSocket
-
+**注意打包时切换地址**

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.oj.server.enums.JudgeStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
+import org.oj.server.jni.JudgeJNIService;
 import org.oj.server.util.FileUtils;
 import org.oj.server.util.LanguageUtil;
 import org.oj.server.util.StringUtils;
@@ -47,6 +48,15 @@ public class Task implements Callable<Record> {
 
     @Override
     public Record call() {
+//        return judge();
+        return JudgeJNIService.judge(this);
+    }
+
+    /**
+     * 不能对程序的运行进行限制
+     */
+    @Deprecated
+    public Record judge() {
         Record record = Record.builder()
                 .build();
         if (LanguageUtil.isCPP(language)) { // c++,

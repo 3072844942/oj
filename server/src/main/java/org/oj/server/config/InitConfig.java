@@ -24,7 +24,7 @@ public class InitConfig implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-//        permissionService.init();
-//        roleService.init();
+        permissionService.init();
+        roleService.init();
     }
 }
