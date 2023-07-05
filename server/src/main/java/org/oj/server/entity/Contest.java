@@ -8,6 +8,8 @@ import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.ContestDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
+import org.oj.server.util.StateEnable;
 import org.self.Sync;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -29,7 +31,7 @@ import java.util.Map;
 @NoArgsConstructor
 @Document(MongoConst.CONTEST)
 @Sync(MongoConst.CONTEST)
-public class Contest {
+public class Contest implements StateEnable {
     /**
      * 比赛ID
      */
@@ -96,6 +98,9 @@ public class Contest {
 
     public static Contest of(ContestDTO contestDTO) {
         Contest contest = BeanCopyUtils.copyObject(contestDTO, Contest.class);
+
+        contest.setContent(SensitiveUtils.filter(contestDTO.getContent()));
+
         contest.setState(EntityStateEnum.valueOf(contestDTO.getState()));
         return contest;
     }

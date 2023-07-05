@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.TagDTO;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -44,6 +45,8 @@ public class Tag {
     private Long createTime;
 
     public static Tag of(TagDTO tagDTO) {
-        return BeanCopyUtils.copyObject(tagDTO, Tag.class);
+        Tag tag = BeanCopyUtils.copyObject(tagDTO, Tag.class);
+        tag.setTitle(SensitiveUtils.filter(tagDTO.getTitle()));
+        return tag;
     }
 }

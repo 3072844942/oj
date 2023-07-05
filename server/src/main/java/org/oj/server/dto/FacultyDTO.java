@@ -33,8 +33,8 @@ public class FacultyDTO {
      */
     private String content;
 
-    public static WarnException check(FacultyDTO facultyDTO) {
-        return null;
+    public static void check(FacultyDTO facultyDTO) {
+
     }
 
     public static FacultyDTO of(Faculty faculty) {

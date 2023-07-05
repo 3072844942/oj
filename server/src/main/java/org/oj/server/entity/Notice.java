@@ -8,6 +8,7 @@ import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.NoticeDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
 import org.self.Sync;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -78,6 +79,10 @@ public class Notice {
 
     public static Notice of(NoticeDTO noticeDTO) {
         Notice notice = BeanCopyUtils.copyObject(noticeDTO, Notice.class);
+
+        notice.setTitle(SensitiveUtils.filter(noticeDTO.getTitle()));
+        notice.setContent(SensitiveUtils.filter(noticeDTO.getContent()));
+
         notice.setState(EntityStateEnum.valueOf(noticeDTO.getState()));
         return notice;
     }

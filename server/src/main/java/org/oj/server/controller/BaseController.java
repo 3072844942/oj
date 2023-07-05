@@ -27,16 +27,6 @@ import java.util.Map;
 @Log4j2
 @RestControllerAdvice
 public abstract class BaseController {
-    @GetMapping("/hello")
-    public Object hello() {
-        return Map.of("hello", new Date().toString());
-    }
-
-    @GetMapping("/hello/judge")
-    public Object judgeHello() {
-        return Map.of("hello", JudgeJNIService.hello());
-    }
-
     @ExceptionHandler(WarnException.class)
     public final Object webExchangeBindException(WarnException ex) {
         return warn(ex.getCode(), ex.getMessage());

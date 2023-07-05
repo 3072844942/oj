@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.FriendLinkDTO;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -64,6 +65,10 @@ public class FriendLink {
     private Long updateTime;
 
     public static FriendLink of(FriendLinkDTO friendLinkDTO) {
-        return BeanCopyUtils.copyObject(friendLinkDTO, FriendLink.class);
+        FriendLink friendLink = BeanCopyUtils.copyObject(friendLinkDTO, FriendLink.class);
+        friendLink.setContent(SensitiveUtils.filter(friendLinkDTO.getContent()));
+        friendLink.setUrl(SensitiveUtils.filter(friendLinkDTO.getUrl()));
+        friendLink.setTitle(SensitiveUtils.filter(friendLinkDTO.getTitle()));
+        return friendLink;
     }
 }

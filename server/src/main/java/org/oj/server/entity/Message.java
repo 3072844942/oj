@@ -5,9 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.oj.server.constant.MongoConst;
+import org.oj.server.dto.MessageDTO;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
@@ -34,17 +38,12 @@ public class Message {
     private String userId;
 
     /**
-     * 接受人id
-     */
-    private String toUserId;
-
-    /**
      * 留言内容
      */
     private String content;
 
     /**
-     * 是否已读
+     *
      */
     private EntityStateEnum state;
 
@@ -53,4 +52,14 @@ public class Message {
      */
     @CreatedDate
     private Long createTime;
+
+    @LastModifiedDate
+    private Long updateTime;
+
+    public static Message of(MessageDTO messageDTO) {
+        Message message = BeanCopyUtils.copyObject(messageDTO, Message.class);
+        message.setState(EntityStateEnum.valueOf(messageDTO.getState()));
+        message.setContent(SensitiveUtils.filter(messageDTO.getContent()));
+        return message;
+    }
 }

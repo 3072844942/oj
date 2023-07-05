@@ -1,5 +1,6 @@
 package org.oj.server.service;
 
+import org.oj.server.constant.MongoConst;
 import org.oj.server.constant.RedisPrefixConst;
 import org.oj.server.dao.FacultyRepository;
 import org.oj.server.dao.UserRepository;
@@ -14,6 +15,7 @@ import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
 import org.oj.server.util.EncryptionUtil;
 import org.oj.server.util.JwtUtil;
+import org.oj.server.util.PermissionUtil;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -152,10 +154,11 @@ public class UserService {
     }
 
 
-    public Map<String, User> findAllById(List<String> ids) {
+    public Map<String, UserProfileVO> findAllById(Collection<String> ids) {
         List<User> infos = userRepository.findAllById(ids);
 
-        return infos.stream().collect(Collectors.toMap(User::getId, a -> a, (k1, k2) -> k1));
+        return infos.stream().map(UserProfileVO::of)
+                .collect(Collectors.toMap(UserProfileVO::getId, a -> a, (k1, k2) -> k1));
     }
 
     public UserVO findById(String userId) {
@@ -184,6 +187,7 @@ public class UserService {
         if (userInfoDTO.getIsDisable() != userInfo.getIsDisable()) userInfo.setIsDisable(userInfoDTO.getIsDisable());
         if (userInfoDTO.getRoleIds() != null && userInfoDTO.getRoleIds().size() != 0)
             userInfo.setRoleIds(userInfoDTO.getRoleIds());
+
         // 真实信息需要审核
         if (StringUtils.isPresent(userInfoDTO.getNumber())) {
             userInfo.setNickname(userInfoDTO.getNickname());
@@ -198,10 +202,7 @@ public class UserService {
             userInfo.setState(EntityStateEnum.REVIEW);
         }
         // 修改状态
-        EntityStateEnum state = EntityStateEnum.valueOf(userInfoDTO.getState());
-        if (state.equals(userInfo.getState())) {
-            userInfo.setState(state);
-        }
+        PermissionUtil.checkState(userInfo, "", userInfoDTO.getState());
 
         userRepository.save(userInfo);
         return UserInfoDTO.of(userInfo);
@@ -213,23 +214,28 @@ public class UserService {
 
         // 查询条件
         Query query = new Query();
-
-        // 指定了作者
+        // 匹配状态
+        if (conditionDTO.getState().equals(0)) {
+            query.addCriteria(Criteria.where(MongoConst.STATE).is(EntityStateEnum.PUBLIC));
+        } else {
+            query.addCriteria(Criteria.where(MongoConst.STATE).is(EntityStateEnum.valueOf(conditionDTO.getState())));
+        }
+        // 指定了学院
         if (conditionDTO.getFacultyId() != null) {
-            query.addCriteria(Criteria.where("facultyId").is(conditionDTO.getFacultyId()));
+            query.addCriteria(Criteria.where(MongoConst.FACULTY_ID).is(conditionDTO.getFacultyId()));
         }
         // 匹配关键字
         String keywords = conditionDTO.getKeywords();
         if (keywords != null) {
             query.addCriteria(new Criteria().orOperator(
-                    Criteria.where("ipAddress").regex(keywords),
-                    Criteria.where("nickname").regex(keywords),
-                    Criteria.where("name").regex(keywords),
-                    Criteria.where("number").is(keywords)
+                    Criteria.where(MongoConst.IP_ADDRESS).regex(keywords),
+                    Criteria.where(MongoConst.NICKNAME).regex(keywords),
+                    Criteria.where(MongoConst.NAME).regex(keywords),
+                    Criteria.where(MongoConst.NUMBER).is(keywords)
             ));
         }
         if (conditionDTO.getIds() != null && conditionDTO.getIds().size() != 0) {
-            query.addCriteria(Criteria.where("roleIds").in(conditionDTO.getId()));
+            query.addCriteria(Criteria.where(MongoConst.ROLE_ID).in(conditionDTO.getId()));
         }
 
         long count = mongoTemplate.count(query, User.class);
@@ -249,5 +255,25 @@ public class UserService {
                 }).toList(),
                 count
         );
+    }
+
+    public void certificateOne(UserInfoDTO userInfoDTO) {
+        if (userRepository.existsByNumber(userInfoDTO.getNumber())) {
+            throw new ErrorException(StatusCodeEnum.DATA_EXIST);
+        }
+
+        Optional<User> byId = userRepository.findById(userInfoDTO.getId());
+        if (byId.isEmpty()) {
+            throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
+        }
+        User user = byId.get();
+        user.setNumber(userInfoDTO.getNumber());
+        user.setName(userInfoDTO.getName());
+        if (userInfoDTO.getFacultyId() != null) {
+            user.setFacultyId(userInfoDTO.getFacultyId());
+        }
+        user.setState(EntityStateEnum.REVIEW);
+
+        userRepository.save(user);
     }
 }

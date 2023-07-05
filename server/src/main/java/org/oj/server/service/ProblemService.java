@@ -9,12 +9,13 @@ import org.oj.server.dto.ProblemDTO;
 import org.oj.server.dto.Request;
 import org.oj.server.entity.Problem;
 import org.oj.server.entity.ProblemExample;
-import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
+import org.oj.server.util.MongoTemplateUtils;
 import org.oj.server.util.PermissionUtil;
+import org.oj.server.util.QueryUtils;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.*;
 import org.springframework.data.domain.Sort;
@@ -37,12 +38,15 @@ public class ProblemService {
     private final UserService userService;
     private final MongoTemplate mongoTemplate;
     private final TagRepository tagRepository;
+    private final MongoTemplateUtils mongoTemplateUtils;
 
-    public ProblemService(ProblemRepository problemRepository, UserService userService, MongoTemplate mongoTemplate, TagRepository tagRepository) {
+
+    public ProblemService(ProblemRepository problemRepository, UserService userService, MongoTemplate mongoTemplate, TagRepository tagRepository, MongoTemplateUtils mongoTemplateUtils) {
         this.problemRepository = problemRepository;
         this.userService = userService;
         this.mongoTemplate = mongoTemplate;
         this.tagRepository = tagRepository;
+        this.mongoTemplateUtils = mongoTemplateUtils;
     }
 
     public ProblemDTO insertOne(ProblemDTO problemDTO) {
@@ -122,33 +126,11 @@ public class ProblemService {
     public void deleteOne(String id) {
         Problem problem = findById(id);
 
-        // 不是自己的， 或没有写权限
-        if (!PermissionUtil.enableWrite(problem.getUserId())) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        problemRepository.deleteById(id);
+        mongoTemplateUtils.delete(id, Problem.class, problem.getUserId());
     }
 
     public void delete(List<String> ids) {
-        // 批量删除需要写权限
-        if (!PermissionUtil.enableWrite("")) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        problemRepository.deleteAllById(ids);
-    }
-
-    public ProblemDTO hideOne(String id) {
-        return updateOneState(id, EntityStateEnum.DRAFT);
-    }
-
-    public ProblemDTO publishOne(String id) {
-        return updateOneState(id, EntityStateEnum.PUBLIC);
-    }
-
-    public ProblemDTO recycleOne(String id) {
-        return updateOneState(id, EntityStateEnum.DELETE);
+        mongoTemplateUtils.delete(ids, Problem.class);
     }
 
     public ProblemVO findOne(String id) {
@@ -200,33 +182,12 @@ public class ProblemService {
         ConditionDTO.check(conditionDTO);
 
         // 查询条件
-        Query query = new Query();
-        // 有读写权限
-        if (PermissionUtil.enableRead(EntityStateEnum.DRAFT, "")) {
-            // 随意读
-            query.addCriteria(Criteria.where(MongoConst.STATE).is(EntityStateEnum.valueOf(conditionDTO.getState())));
-        } else {
-            EntityStateEnum state = EntityStateEnum.valueOf(conditionDTO.getState());
-            // 如果读的不是公开
-            if (!state.equals(EntityStateEnum.PUBLIC)) {
-                throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-            } else {
-                query.addCriteria(Criteria.where(MongoConst.STATE).is(state));
-            }
-        }
+        Query query = QueryUtils.defaultQuery(conditionDTO);
 
-        // 指定了作者
-        if (conditionDTO.getId() != null) {
-            query.addCriteria(Criteria.where(MongoConst.USER_ID).is(conditionDTO.getId()));
-        }
         // 匹配关键字
         String keywords = conditionDTO.getKeywords();
-        if (keywords != null) {
-            query.addCriteria(new Criteria().orOperator(
-                    Criteria.where(MongoConst.TITLE).regex(keywords),
-                    Criteria.where(MongoConst.CONTENT).regex(keywords)
-            ));
-        }
+        QueryUtils.regexKeywords(query, keywords, MongoConst.TITLE, MongoConst.CONTENT);
+
         if (conditionDTO.getTags() != null && conditionDTO.getTags().size() != 0) {
             query.addCriteria(Criteria.where(MongoConst.TAG_ID).in(conditionDTO.getTags()));
         }
@@ -261,13 +222,13 @@ public class ProblemService {
      */
     private List<ProblemSearchVO> parse(List<Problem> all) {
         List<String> userIds = all.stream().map(Problem::getUserId).toList();
-        Map<String, User> infoMap = userService.findAllById(userIds);
+        Map<String, UserProfileVO> infoMap = userService.findAllById(userIds);
 
         return all.stream()
                 .map(a -> {
                     ProblemSearchVO problemSearchDTO = ProblemSearchVO.of(a);
 
-                    problemSearchDTO.setAuthor(UserProfileVO.of(infoMap.get(a.getUserId())));
+                    problemSearchDTO.setAuthor(infoMap.get(a.getUserId()));
                     problemSearchDTO.setTags(
                             tagRepository.findAllById(a.getTagIds()).stream().map(TagVO::of).toList()
                     );

@@ -21,7 +21,7 @@ public class JudgePool {
             new ThreadPoolExecutor.CallerRunsPolicy());
 
 
-    public static Future<Record> execute(Task callable) {
+    public static Future<Record> execute(Callable<Record> callable) {
         return pool.submit(callable);
     }
 

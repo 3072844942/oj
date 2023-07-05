@@ -6,20 +6,19 @@ import org.oj.server.dao.NoticeRepository;
 import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.NoticeDTO;
 import org.oj.server.dto.Request;
-import org.oj.server.entity.Article;
 import org.oj.server.entity.Notice;
-import org.oj.server.entity.User;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
+import org.oj.server.util.MongoTemplateUtils;
 import org.oj.server.util.PermissionUtil;
+import org.oj.server.util.QueryUtils;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.NoticeSearchVO;
 import org.oj.server.vo.NoticeVO;
 import org.oj.server.vo.PageVO;
 import org.oj.server.vo.UserProfileVO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -39,11 +38,13 @@ public class NoticeService {
     private final NoticeRepository noticeRepository;
     private final UserService userService;
     private final MongoTemplate mongoTemplate;
+    private final MongoTemplateUtils mongoTemplateUtils;
 
-    public NoticeService(NoticeRepository noticeRepository, UserService userService, MongoTemplate mongoTemplate) {
+    public NoticeService(NoticeRepository noticeRepository, UserService userService, MongoTemplate mongoTemplate, MongoTemplateUtils mongoTemplateUtils) {
         this.noticeRepository = noticeRepository;
         this.userService = userService;
         this.mongoTemplate = mongoTemplate;
+        this.mongoTemplateUtils = mongoTemplateUtils;
     }
 
     public NoticeDTO insertOne(NoticeDTO noticeDTO) {
@@ -114,21 +115,11 @@ public class NoticeService {
     public void deleteOne(String id) {
         Notice notice = findById(id);
 
-        // 不是自己的， 或没有写权限
-        if (!PermissionUtil.enableWrite(notice.getUserId())) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        noticeRepository.deleteById(id);
+        mongoTemplateUtils.delete(id, Notice.class, notice.getUserId());
     }
 
     public void delete(List<String> ids) {
-        // 批量删除需要写权限
-        if (!PermissionUtil.enableWrite("")) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        noticeRepository.deleteAllById(ids);
+        mongoTemplateUtils.delete(ids, Notice.class);
     }
 
     public NoticeVO findOne(String id) {
@@ -162,25 +153,8 @@ public class NoticeService {
         ConditionDTO.check(conditionDTO);
 
         // 查询条件
-        Query query = new Query();
-        // 有读写权限
-        if (PermissionUtil.enableRead(EntityStateEnum.DRAFT, "")) {
-            // 随意读
-            query.addCriteria(Criteria.where(MongoConst.STATE).is(EntityStateEnum.valueOf(conditionDTO.getState())));
-        } else {
-            EntityStateEnum state = EntityStateEnum.valueOf(conditionDTO.getState());
-            // 如果读的不是公开
-            if (!state.equals(EntityStateEnum.PUBLIC)) {
-                throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-            } else {
-                query.addCriteria(Criteria.where(MongoConst.STATE).is(state));
-            }
-        }
+        Query query = QueryUtils.defaultQuery(conditionDTO);
 
-        // 指定了作者
-        if (conditionDTO.getId() != null) {
-            query.addCriteria(Criteria.where(MongoConst.USER_ID).is(conditionDTO.getId()));
-        }
         // 匹配关键字
         String keywords = conditionDTO.getKeywords();
         if (keywords != null) {
@@ -216,13 +190,13 @@ public class NoticeService {
      */
     private List<NoticeSearchVO> parse(List<Notice> all) {
         List<String> userIds = all.stream().map(Notice::getUserId).toList();
-        Map<String, User> infoMap = userService.findAllById(userIds);
+        Map<String, UserProfileVO> infoMap = userService.findAllById(userIds);
 
         return all.stream()
                 .map(a -> {
                     NoticeSearchVO noticeSearchDTO = NoticeSearchVO.of(a);
 
-                    noticeSearchDTO.setAuthor(UserProfileVO.of(infoMap.get(a.getUserId())));
+                    noticeSearchDTO.setAuthor(infoMap.get(a.getUserId()));
                     return noticeSearchDTO;
                 })
                 .toList();

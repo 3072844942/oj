@@ -18,11 +18,8 @@ import org.oj.server.enums.FilePathEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
-import org.oj.server.util.Excel;
-import org.oj.server.util.PermissionUtil;
-import org.oj.server.util.StringUtils;
+import org.oj.server.util.*;
 import org.oj.server.vo.*;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -47,14 +44,16 @@ public class ContestService {
     private final MongoTemplate mongoTemplate;
     private final OJConfig ojConfig;
     private final TagRepository tagRepository;
+    private final MongoTemplateUtils mongoTemplateUtils;
 
-    public ContestService(ContestRepository contestRepository, UserService userService, ProblemRepository problemRepository, MongoTemplate mongoTemplate, OJConfig ojConfig, TagRepository tagRepository) {
+    public ContestService(ContestRepository contestRepository, UserService userService, ProblemRepository problemRepository, MongoTemplate mongoTemplate, OJConfig ojConfig, TagRepository tagRepository, MongoTemplateUtils mongoTemplateUtils) {
         this.contestRepository = contestRepository;
         this.userService = userService;
         this.problemRepository = problemRepository;
         this.mongoTemplate = mongoTemplate;
         this.ojConfig = ojConfig;
         this.tagRepository = tagRepository;
+        this.mongoTemplateUtils = mongoTemplateUtils;
     }
 
     public ContestInfoVO findOne(String contestId) {
@@ -112,14 +111,14 @@ public class ContestService {
         }
 
         List<RankInfo> rankInfos = list.subList(frontIndex, conditionDTO.getSize());
-        Map<String, User> userMap = userService.findAllById(rankInfos.stream().map(RankInfo::getUserId).toList());
+        Map<String, UserProfileVO> userMap = userService.findAllById(rankInfos.stream().map(RankInfo::getUserId).toList());
 
 
         return new PageVO<>(
                 rankInfos.stream().map(i -> {
                     RankInfoVO rankInfoVO = RankInfoVO.of(i);
                     // 设置用户
-                    rankInfoVO.setUser(UserProfileVO.of(userMap.get(i.getUserId())));
+                    rankInfoVO.setUser(userMap.get(i.getUserId()));
                     // 根据比赛的题目顺序生成状态
                     rankInfoVO.setProblemStates(contest.getProblemIds().stream().map(j -> {
                         return ProblemStateVO.of(i.getProblemStateMap().get(j));
@@ -147,7 +146,7 @@ public class ContestService {
 
         int frontIndex = (conditionDTO.getCurrent() - 1) * conditionDTO.getSize();
         if (frontIndex >= contest.getUserIds().size()) {
-            throw new ErrorException(StatusCodeEnum.INDEX_OUT_OF_BOUND);
+            throw new WarnException(StatusCodeEnum.INDEX_OUT_OF_BOUND);
         }
 
         List<String> ids = contest.getUserIds().subList(frontIndex, conditionDTO.getSize());
@@ -162,42 +161,20 @@ public class ContestService {
         ConditionDTO.check(conditionDTO);
 
         // 查询条件
-        Query query = new Query();
-        // 有读写权限
-        if (PermissionUtil.enableRead(EntityStateEnum.DRAFT, "")) {
-            // 随意读
-            query.addCriteria(Criteria.where(MongoConst.STATE).is(EntityStateEnum.valueOf(conditionDTO.getState())));
-        } else {
-            EntityStateEnum state = EntityStateEnum.valueOf(conditionDTO.getState());
-            // 如果读的不是公开
-            if (!state.equals(EntityStateEnum.PUBLIC)) {
-                throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-            } else {
-                query.addCriteria(Criteria.where(MongoConst.STATE).is(state));
-            }
-        }
+        Query query = QueryUtils.defaultQuery(conditionDTO);
 
-        // 指定了作者
-        if (conditionDTO.getId() != null) {
-            query.addCriteria(Criteria.where(MongoConst.USER_ID).is(conditionDTO.getId()));
-        }
         // 匹配关键字
         String keywords = conditionDTO.getKeywords();
-        if (keywords != null) {
-            query.addCriteria(new Criteria().orOperator(
-                    Criteria.where(MongoConst.TITLE).regex(keywords),
-                    Criteria.where(MongoConst.CONTENT).regex(keywords),
-                    Criteria.where(MongoConst.CATEGORY_ID).is(keywords)
-            ));
-        }
+        QueryUtils.regexKeywords(query, keywords, MongoConst.TITLE, MongoConst.CONTENT, MongoConst.CATEGORY_ID);
+
         if (conditionDTO.getTags() != null && conditionDTO.getTags().size() != 0) {
             query.addCriteria(Criteria.where(MongoConst.TAG_ID).in(conditionDTO.getTags()));
         }
 
         long count = mongoTemplate.count(query, Contest.class);
 
-        query.with(Sort.by(Sort.Order.desc(MongoConst.START_TIME)));
-        query.skip((conditionDTO.getCurrent() - 1L) * conditionDTO.getSize()).limit(conditionDTO.getSize());
+        query.with(QueryUtils.defaultSort());
+        QueryUtils.skip(query, conditionDTO);
         List<Contest> all = mongoTemplate.find(query, Contest.class);
 
         return new PageVO<>(
@@ -219,7 +196,6 @@ public class ContestService {
      * @return 简略比赛信息列表
      */
     private List<ContestProfileVO> parse(List<Contest> all) {
-        List<String> userIds = all.stream().map(Contest::getUserId).toList();
 
         return all.stream()
                 .map(a -> {
@@ -256,13 +232,8 @@ public class ContestService {
         if (StringUtils.isPresent(contestDTO.getContent())) contest.setContent(contestDTO.getContent());
         if (contestDTO.getStartTime() != 0) contest.setStartTime(contest.getStartTime());
         if (contestDTO.getEndTime() != 0) contest.setEndTime(contest.getEndTime());
-        if (PermissionUtil.enableWrite("")) {
-            contest.setState(EntityStateEnum.valueOf(contestDTO.getState()));
-        } else {
-            // 没有权限不允许立刻公开
-            if (!EntityStateEnum.PUBLIC.equals(EntityStateEnum.valueOf(contestDTO.getState())))
-                contest.setState(EntityStateEnum.valueOf(contestDTO.getState()));
-        }
+
+        PermissionUtil.checkState(contest, "", contestDTO.getState());
 
         // 保存
         contest = contestRepository.save(contest);
@@ -273,34 +244,17 @@ public class ContestService {
         Contest contest = findById(contestId);
 
         // 不是自己的， 或没有写权限
-        if (!PermissionUtil.enableWrite(contest.getUserId())) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        contestRepository.deleteById(contestId);
+        mongoTemplateUtils.delete(contestId, Contest.class, contest.getUserId());
     }
 
     public void delete(List<String> ids) {
-        // 批量删除需要写权限
-        if (!PermissionUtil.enableWrite("")) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        contestRepository.deleteAllById(ids);
+        mongoTemplateUtils.delete(ids, Contest.class);
     }
 
     public ContestDTO insertOne(ContestDTO contestDTO) {
         ContestDTO.check(contestDTO);
 
-        // id不为空
-        if (StringUtils.isPresent(contestDTO.getId())) {
-            // 数据已存在
-            if (contestRepository.existsById(contestDTO.getId())) {
-                throw new ErrorException(StatusCodeEnum.DATA_EXIST);
-            }
-            // 不存在则置空
-            contestDTO.setId(null);
-        }
+        contestDTO.setId(null);
 
         Contest contest = Contest.of(contestDTO);
         // 设置作者
@@ -310,7 +264,6 @@ public class ContestService {
         contest.setState(EntityStateEnum.DRAFT);
 
         contest = contestRepository.insert(contest);
-
         return ContestDTO.of(contest);
     }
 
@@ -348,7 +301,7 @@ public class ContestService {
 
         Collection<RankInfo> values = contest.getRank().values();
         // 查找所有有记录的用户
-        Map<String, User> userMap = userService.findAllById(values.stream().map(RankInfo::getUserId).toList());
+        Map<String, UserProfileVO> userMap = userService.findAllById(values.stream().map(RankInfo::getUserId).toList());
 
         // 写入excel
         try (Excel excel = new Excel()) {
@@ -363,7 +316,7 @@ public class ContestService {
             }).map(i -> {
                 RankInfoVO rankInfoVO = RankInfoVO.of(i);
                 // 设置用户
-                rankInfoVO.setUser(UserProfileVO.of(userMap.get(i.getUserId())));
+                rankInfoVO.setUser(userMap.get(i.getUserId()));
                 // 根据比赛的题目顺序生成状态
                 rankInfoVO.setProblemStates(contest.getProblemIds().stream().map(j -> {
                     return ProblemStateVO.of(i.getProblemStateMap().get(j));

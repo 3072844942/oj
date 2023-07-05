@@ -12,19 +12,19 @@ public enum EntityStateEnum {
     /**
      * 删除
      */
-    DELETE(0, "删除"),
+    DELETE(1, "删除"),
     /**
      * 草稿
      */
-    DRAFT(1, "草稿"),
+    DRAFT(2, "草稿"),
     /**
      * 审核
      */
-    REVIEW(2, "审核"),
+    REVIEW(3, "审核"),
     /**
      * 公开
      */
-    PUBLIC(3, "公开");
+    PUBLIC(4, "公开");
 
     /**
      * 编号

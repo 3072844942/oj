@@ -9,6 +9,8 @@ import org.oj.server.dto.ArticleDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
 import org.oj.server.util.SensitiveUtils;
+import org.oj.server.util.StateEnable;
+import org.oj.server.util.TopEnable;
 import org.self.Sync;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -30,7 +32,7 @@ import java.util.List;
 @NoArgsConstructor
 @Document(MongoConst.ARTICLE)
 @Sync(MongoConst.ARTICLE)
-public class Article {
+public class Article implements StateEnable, TopEnable {
     /**
      * id
      */

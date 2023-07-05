@@ -16,7 +16,9 @@ import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
+import org.oj.server.util.MongoTemplateUtils;
 import org.oj.server.util.PermissionUtil;
+import org.oj.server.util.QueryUtils;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.*;
 import org.springframework.data.domain.Page;
@@ -42,41 +44,30 @@ public class ArticleService {
     private final MongoTemplate mongoTemplate;
     private final TagRepository tagRepository;
     private final CategoryRepository categoryRepository;
+    private final MongoTemplateUtils mongoTemplateUtils;
 
-    public ArticleService(ArticleRepository articleRepository, UserService userService, MongoTemplate mongoTemplate, TagRepository tagRepository, CategoryRepository categoryRepository) {
+    public ArticleService(ArticleRepository articleRepository, UserService userService, MongoTemplate mongoTemplate, TagRepository tagRepository, CategoryRepository categoryRepository, MongoTemplateUtils mongoTemplateUtils) {
         this.articleRepository = articleRepository;
         this.userService = userService;
         this.mongoTemplate = mongoTemplate;
         this.tagRepository = tagRepository;
         this.categoryRepository = categoryRepository;
+        this.mongoTemplateUtils = mongoTemplateUtils;
     }
 
     public ArticleDTO insertOne(ArticleDTO articleDTO) {
         ArticleDTO.check(articleDTO);
-
-        // id不为空
-        if (StringUtils.isPresent(articleDTO.getId())) {
-            // 数据已存在
-            if (articleRepository.existsById(articleDTO.getId())) {
-                throw new ErrorException(StatusCodeEnum.DATA_EXIST);
-            }
-            // 不存在则置空
-            articleDTO.setId(null);
-        }
+        // 置空
+        articleDTO.setId(null);
 
         Article article = Article.of(articleDTO);
         // 设置作者
-        if (Request.user.get() != null) {
-            article.setUserId(Request.user.get().getId());
-        }
+        article.setUserId(Request.user.get().getId());
         article.setState(EntityStateEnum.DRAFT);
         // 没有写权限
-        if (!PermissionUtil.enableWrite("")) {
-            article.setIsTop(false);
-        }
+        PermissionUtil.checkTop(article, article.getIsTop());
 
         article = articleRepository.insert(article);
-
         return ArticleDTO.of(article);
     }
 
@@ -85,7 +76,7 @@ public class ArticleService {
 
         // id为空
         if (StringUtils.isEmpty(articleDTO.getId())) {
-            throw new WarnException(StatusCodeEnum.FAILED_PRECONDITION);
+            throw new ErrorException(StatusCodeEnum.FAILED_PRECONDITION);
         }
         Optional<Article> byId = articleRepository.findById(articleDTO.getId());
         // 数据不存在
@@ -98,6 +89,7 @@ public class ArticleService {
         }
 
         Article article = byId.get();
+
         article.setUserId(Request.user.get().getId());
         if (articleDTO.getTagIds() != null && articleDTO.getTagIds().size() != 0)
             article.setTagIds(articleDTO.getTagIds());
@@ -106,20 +98,10 @@ public class ArticleService {
         if (StringUtils.isPresent(articleDTO.getTitle())) article.setTitle(articleDTO.getTitle());
         if (StringUtils.isPresent(articleDTO.getSummary())) article.setSummary(articleDTO.getSummary());
         if (StringUtils.isPresent(articleDTO.getContent())) article.setContent(articleDTO.getContent());
-        if (PermissionUtil.enableWrite("")) {
-            article.setIsTop(articleDTO.getIsTop());
-            article.setState(EntityStateEnum.valueOf(articleDTO.getState()));
-        } else {
-            article.setIsTop(false);
-            // 没有权限不允许立刻公开
-            if (!EntityStateEnum.PUBLIC.equals(EntityStateEnum.valueOf(articleDTO.getState())))
-                article.setState(EntityStateEnum.valueOf(articleDTO.getState()));
-        }
 
-        // 没有写权限
-        if (!PermissionUtil.enableWrite("")) {
-            article.setIsTop(false);
-        }
+        PermissionUtil.checkState(article, byId.get().getUserId(), articleDTO.getState());
+        PermissionUtil.checkTop(article, articleDTO.getIsTop());
+
         // 保存
         article = articleRepository.save(article);
         return ArticleDTO.of(article);
@@ -127,22 +109,16 @@ public class ArticleService {
 
     public void deleteOne(String id) {
         Article article = findById(id);
-
         // 不是自己的， 或没有写权限
         if (!PermissionUtil.enableWrite(article.getUserId())) {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
 
-        articleRepository.deleteById(id);
+        mongoTemplateUtils.delete(id, Article.class);
     }
 
     public void delete(List<String> ids) {
-        // 批量删除需要写权限
-        if (!PermissionUtil.enableWrite("")) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        articleRepository.deleteAllById(ids);
+        mongoTemplateUtils.delete(ids, Article.class);
     }
 
     public ArticleVO findOne(String id) {
@@ -212,25 +188,8 @@ public class ArticleService {
         ConditionDTO.check(conditionDTO);
 
         // 查询条件
-        Query query = new Query();
-        // 有读写权限
-        if (PermissionUtil.enableRead(EntityStateEnum.DRAFT, "")) {
-            // 随意读
-            query.addCriteria(Criteria.where(MongoConst.STATE).is(EntityStateEnum.valueOf(conditionDTO.getState())));
-        } else {
-            EntityStateEnum state = EntityStateEnum.valueOf(conditionDTO.getState());
-            // 如果读的不是公开
-            if (!state.equals(EntityStateEnum.PUBLIC)) {
-                throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-            } else {
-                query.addCriteria(Criteria.where(MongoConst.STATE).is(state));
-            }
-        }
+        Query query = QueryUtils.defaultQuery(conditionDTO);
 
-        // 指定了作者
-        if (conditionDTO.getId() != null) {
-            query.addCriteria(Criteria.where(MongoConst.USER_ID).is(conditionDTO.getId()));
-        }
         // 匹配关键字
         String keywords = conditionDTO.getKeywords();
         if (keywords != null) {
@@ -246,8 +205,8 @@ public class ArticleService {
 
         long count = mongoTemplate.count(query, Article.class);
 
-        query.with(Sort.by(Sort.Order.desc(MongoConst.UPDATE_TIME)));
-        query.skip((conditionDTO.getCurrent() - 1L) * conditionDTO.getSize()).limit(conditionDTO.getSize());
+        query.with(QueryUtils.defaultSort());
+        QueryUtils.skip(query, conditionDTO);
         List<Article> all = mongoTemplate.find(query, Article.class);
 
         return new PageVO<>(
@@ -274,13 +233,13 @@ public class ArticleService {
      */
     private List<ArticleSearchVO> parse(List<Article> all) {
         List<String> userIds = all.stream().map(Article::getUserId).toList();
-        Map<String, User> infoMap = userService.findAllById(userIds);
+        Map<String, UserProfileVO> infoMap = userService.findAllById(userIds);
 
         return all.stream()
                 .map(a -> {
                     ArticleSearchVO articleSearchDTO = ArticleSearchVO.of(a);
 
-                    articleSearchDTO.setAuthor(UserProfileVO.of(infoMap.get(a.getUserId())));
+                    articleSearchDTO.setAuthor(infoMap.get(a.getUserId()));
                     articleSearchDTO.setCategory(CategoryVO.of(categoryRepository.findById(a.getCategoryId()).get()));
                     List<Tag> allById = tagRepository.findAllById(a.getTagIds());
                     articleSearchDTO.setTags(

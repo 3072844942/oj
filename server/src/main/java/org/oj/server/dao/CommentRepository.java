@@ -10,4 +10,5 @@ import java.util.List;
  * @since 2023/5/31 上午11:21
  */
 public interface CommentRepository extends MongoRepository<Comment, String> {
+    List<Comment> findAllByArticleId(String articleId);
 }

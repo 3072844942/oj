@@ -9,6 +9,7 @@ import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
 import org.oj.server.util.PermissionUtil;
+import org.oj.server.util.QueryUtils;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.FriendLinkVO;
 import org.oj.server.vo.PageVO;
@@ -37,19 +38,10 @@ public class FriendLinkService {
     public FriendLinkVO insertOne(FriendLinkDTO friendLinkDTO) {
         FriendLinkDTO.check(friendLinkDTO);
 
-        // id不为空
-        if (StringUtils.isPresent(friendLinkDTO.getId())) {
-            // 数据已存在
-            if (friendLinkRepository.existsById(friendLinkDTO.getId())) {
-                throw new ErrorException(StatusCodeEnum.DATA_EXIST);
-            }
-            // 不存在则置空
-            friendLinkDTO.setId("");
-        }
-
         FriendLink friendLink = FriendLink.of(friendLinkDTO);
-        friendLink = friendLinkRepository.insert(friendLink);
+        friendLink.setId(null);
 
+        friendLink = friendLinkRepository.insert(friendLink);
         return FriendLinkVO.of(friendLink);
     }
 
@@ -76,14 +68,7 @@ public class FriendLinkService {
 
         // 查询条件
         Query query = new Query();
-        String keywords = conditionDTO.getKeywords();
-        if (keywords != null) {
-            query.addCriteria(new Criteria().orOperator(
-                    Criteria.where(MongoConst.TITLE).regex(keywords),
-                    Criteria.where(MongoConst.URL).regex(keywords),
-                    Criteria.where(MongoConst.CONTENT).regex(keywords)
-            ));
-        }
+        QueryUtils.regexKeywords(query, conditionDTO.getKeywords(), MongoConst.TITLE, MongoConst.URL, MongoConst.CONTENT);
 
         long count = mongoTemplate.count(query, FriendLink.class);
 
@@ -98,7 +83,7 @@ public class FriendLinkService {
     public FriendLinkDTO updateOne(FriendLinkDTO friendLinkDTO) {
         FriendLinkDTO.check(friendLinkDTO);
 
-        // 数据已存在
+        // 数据不存在
         if (!friendLinkRepository.existsById(friendLinkDTO.getId())) {
             throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
         }

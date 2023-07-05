@@ -62,4 +62,14 @@ public class UploadController extends BaseController {
     public Object uploadRecord(@RequestBody MultipartFile file) {
         return ok(uploadService.uploadRecord(file));
     }
+
+    @GetMapping("list")
+    public Object list(@RequestParam Integer pathEnum) {
+        return ok(uploadService.list(pathEnum));
+    }
+
+    @GetMapping("list/{recordPath}")
+    public Object listRecord(@PathVariable String recordPath) {
+        return ok(uploadService.list(recordPath));
+    }
 }

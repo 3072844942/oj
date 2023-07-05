@@ -1,6 +1,5 @@
 package org.oj.server.service;
 
-import jakarta.annotation.PostConstruct;
 import org.oj.server.constant.MongoConst;
 import org.oj.server.dao.CategoryRepository;
 import org.oj.server.dto.CategoryDTO;
@@ -8,7 +7,8 @@ import org.oj.server.dto.ConditionDTO;
 import org.oj.server.entity.Category;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
-import org.oj.server.util.PermissionUtil;
+import org.oj.server.util.MongoTemplateUtils;
+import org.oj.server.util.QueryUtils;
 import org.oj.server.util.StringUtils;
 import org.oj.server.vo.CategoryVO;
 import org.oj.server.vo.PageVO;
@@ -17,9 +17,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author march
@@ -30,9 +28,12 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final MongoTemplate mongoTemplate;
 
-    public CategoryService(CategoryRepository categoryRepository, MongoTemplate mongoTemplate) {
+    private final MongoTemplateUtils mongoTemplateUtils;
+
+    public CategoryService(CategoryRepository categoryRepository, MongoTemplate mongoTemplate, MongoTemplateUtils mongoTemplateUtils) {
         this.categoryRepository = categoryRepository;
         this.mongoTemplate = mongoTemplate;
+        this.mongoTemplateUtils = mongoTemplateUtils;
     }
 
     public CategoryVO insertOne(CategoryDTO categoryDTO) {
@@ -55,21 +56,11 @@ public class CategoryService {
     }
 
     public void delete(List<String> ids) {
-        // 删除需要写权限
-        if (!PermissionUtil.enableWrite("")) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        categoryRepository.deleteAllById(ids);
+        mongoTemplateUtils.delete(ids, Category.class);
     }
 
     public void deleteOne(String id) {
-        // 删除需要写权限
-        if (!PermissionUtil.enableWrite("")) {
-            throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
-        }
-
-        categoryRepository.deleteById(id);
+        mongoTemplateUtils.delete(id, Category.class);
     }
 
     public PageVO<CategoryVO> find(ConditionDTO conditionDTO) {
@@ -84,7 +75,7 @@ public class CategoryService {
 
         long count = mongoTemplate.count(query, Category.class);
 
-        query.skip((conditionDTO.getCurrent() - 1L) * conditionDTO.getSize()).limit(conditionDTO.getSize());
+        QueryUtils.skip(query, conditionDTO);
         List<Category> categories = mongoTemplate.find(query, Category.class);
         return new PageVO<>(
                 categories.stream().map(CategoryVO::of).toList(),

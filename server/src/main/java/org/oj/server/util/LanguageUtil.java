@@ -1,5 +1,6 @@
 package org.oj.server.util;
 
+import org.oj.server.enums.JudgeLanguageEnum;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
@@ -20,10 +21,9 @@ public class LanguageUtil {
      * @return 后缀
      */
     public static String fileSuffix(Integer language) {
-        // todo 没有枚举常量真的很难过
-        if (language.equals(0)) return ".cpp";
-        if (language.equals(1)) return ".java";
-        if (language.equals(2)) return ".py";
+        if (language.equals(JudgeLanguageEnum.CPP.getCode())) return ".cpp";
+        if (language.equals(JudgeLanguageEnum.JAVA.getCode())) return ".java";
+        if (language.equals(JudgeLanguageEnum.PYTHON3.getCode())) return ".py";
 
         throw new WarnException(StatusCodeEnum.FAIL);
     }
@@ -62,9 +62,9 @@ public class LanguageUtil {
      * @return
      */
     public static String cmdPrefix(Integer language) {
-        if (language.equals(0)) return "";
-        if (language.equals(1)) return "java ";
-        if (language.equals(2)) return "python3 ";
+        if (language.equals(JudgeLanguageEnum.CPP.getCode())) return "";
+        if (language.equals(JudgeLanguageEnum.JAVA.getCode())) return "java";
+        if (language.equals(JudgeLanguageEnum.PYTHON3.getCode())) return "python3";
 
         throw new WarnException(StatusCodeEnum.FAIL);
     }

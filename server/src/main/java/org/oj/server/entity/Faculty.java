@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.FacultyDTO;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -46,6 +47,9 @@ public class Faculty {
     private Long createTime;
 
     public static Faculty of(FacultyDTO facultyDTO) {
-        return BeanCopyUtils.copyObject(facultyDTO, Faculty.class);
+        Faculty faculty = BeanCopyUtils.copyObject(facultyDTO, Faculty.class);
+        faculty.setContent(SensitiveUtils.filter(facultyDTO.getContent()));
+        faculty.setTitle(SensitiveUtils.filter(facultyDTO.getTitle()));
+        return faculty;
     }
 }

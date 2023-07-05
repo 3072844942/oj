@@ -8,6 +8,7 @@ import org.oj.server.constant.MongoConst;
 import org.oj.server.dto.ProblemDTO;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -117,6 +118,13 @@ public class Problem {
 
     public static Problem of(ProblemDTO problemDTO) {
         Problem problem = BeanCopyUtils.copyObject(problemDTO, Problem.class);
+
+        problem.setContent(SensitiveUtils.filter(problemDTO.getContent()));
+        problem.setTitle(SensitiveUtils.filter(problemDTO.getTitle()));
+        problem.setIntro(SensitiveUtils.filter(problemDTO.getIntro()));
+        problem.setInputContent(SensitiveUtils.filter(problemDTO.getInputContent()));
+        problem.setOutputContent(SensitiveUtils.filter(problemDTO.getOutputContent()));
+
         problem.setState(EntityStateEnum.valueOf(problemDTO.getState()));
         return problem;
     }

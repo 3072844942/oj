@@ -2,6 +2,8 @@ package org.oj.server.dto;
 
 import lombok.*;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.exception.WarnException;
+import org.oj.server.util.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -45,4 +47,10 @@ public class PhotoDTO {
      * 是否删除
      */
     private Integer state;
+
+    public static void check(PhotoDTO photoDTO) {
+        if (StringUtils.isSpecifiedLength(photoDTO.getTitle(), 0, 20)) {
+            throw new WarnException("标题长度不符");
+        }
+    }
 }

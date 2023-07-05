@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.oj.server.dto.ProblemExampleDTO;
 import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
@@ -27,6 +28,9 @@ public class ProblemExample {
     private String answer;
 
     public static ProblemExample of(ProblemExampleDTO problemExampleDTO) {
-        return BeanCopyUtils.copyObject(problemExampleDTO, ProblemExample.class);
+        return ProblemExample.builder()
+                .answer(SensitiveUtils.filter(problemExampleDTO.getAnswer()))
+                .test(SensitiveUtils.filter(problemExampleDTO.getTest()))
+                .build();
     }
 }

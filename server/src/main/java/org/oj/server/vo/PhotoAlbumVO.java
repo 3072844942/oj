@@ -1,22 +1,22 @@
-package org.oj.server.dto;
+package org.oj.server.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.entity.PhotoAlbum;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.util.BeanCopyUtils;
 
 /**
- * 相册
- *
- * @author bin
- * @date 2021/08/04
+ * @author march
+ * @since 2023/7/4 上午9:57
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PhotoAlbumDTO {
+public class PhotoAlbumVO {
 
     /**
      * 主键
@@ -53,7 +53,9 @@ public class PhotoAlbumDTO {
      */
     private Long updateTime;
 
-    public static void check(PhotoAlbumDTO albumDTO) {
-
+    public static PhotoAlbumVO of(PhotoAlbum photoAlbum) {
+        PhotoAlbumVO photoAlbumVO = BeanCopyUtils.copyObject(photoAlbum, PhotoAlbumVO.class);
+        photoAlbumVO.setState(photoAlbum.getState().getCode());
+        return photoAlbumVO;
     }
 }

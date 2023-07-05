@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  *
- * todo 管理用户
+ * 管理用户
  * @author march
  * @since 2023/5/31 下午3:20
  */
@@ -58,6 +58,14 @@ public class UserController extends BaseController {
     @PatchMapping("update")
     public Object updateOne(@RequestBody UserInfoDTO userInfoDTO) {
         return ok(userService.updateOne(userInfoDTO));
+    }
+
+    @OptLog(optType = OptTypeConst.UPDATE)
+    @Operation(summary = "实名认证")
+    @PatchMapping("certificate")
+    public Object certificate(@RequestBody UserInfoDTO userInfoDTO) {
+        userService.certificateOne(userInfoDTO);
+        return ok();
     }
 
     @Operation(summary = "查找用户")

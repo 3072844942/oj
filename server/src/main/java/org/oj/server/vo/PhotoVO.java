@@ -1,36 +1,29 @@
-package org.oj.server.entity;
+package org.oj.server.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.oj.server.constant.MongoConst;
-import org.oj.server.dto.PhotoDTO;
+import org.oj.server.entity.Photo;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.util.BeanCopyUtils;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 
 /**
- * 照片
- *
- * @author bin
- * @date 2021/08/04
+ * @author march
+ * @since 2023/7/4 上午8:14
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
-@Document(MongoConst.PHOTO)
-public class Photo {
+@NoArgsConstructor
+@AllArgsConstructor
+public class PhotoVO {
 
     /**
      * 照片id
      */
-    @Id
     private String id;
 
     /**
@@ -56,23 +49,21 @@ public class Photo {
     /**
      * 是否删除
      */
-    private EntityStateEnum state;
+    private Integer state;
 
     /**
      * 创建时间
      */
-    @CreatedDate
     private Long createTime;
 
     /**
      * 修改时间
      */
-    @LastModifiedDate
     private Long updateTime;
 
-    public static Photo of(PhotoDTO photoDTO) {
-        Photo photo = BeanCopyUtils.copyObject(photoDTO, Photo.class);
-        photo.setState(EntityStateEnum.valueOf(photoDTO.getState()));
-        return photo;
+    public static PhotoVO of(Photo photo) {
+        PhotoVO photoVO = BeanCopyUtils.copyObject(photo, PhotoVO.class);
+        photoVO.setState(photo.getState().getCode());
+        return photoVO;
     }
 }

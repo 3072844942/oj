@@ -6,8 +6,6 @@ import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.util.LanguageUtil;
 import org.oj.server.util.UnPackUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +13,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author march
@@ -55,11 +60,9 @@ public class UploadService {
             file.transferTo(dest);
             if (type.equalsIgnoreCase(".zip")) {
                 UnPackUtil.unPackZip(dest, null, path);
-            }
-            else if (type.equalsIgnoreCase(".rar")) {
+            } else if (type.equalsIgnoreCase(".rar")) {
                 UnPackUtil.unPackRar(dest, path);
-            }
-            else {
+            } else {
                 throw new ErrorException(StatusCodeEnum.FAILED_PRECONDITION);
             }
         } catch (IOException e) {
@@ -90,6 +93,7 @@ public class UploadService {
         } catch (IOException e) {
             throw new ErrorException(StatusCodeEnum.FAIL);
         }
+
         return ojConfig.getUrlBase() + filePath.getPath() + fileName;
     }
 
@@ -105,5 +109,43 @@ public class UploadService {
         }
 
         return path;
+    }
+
+    public List<String> list(Integer pathEnum) {
+        String path = ojConfig.getBase() + FilePathEnum.valueOf(pathEnum).getPath();
+        return travel(path);
+    }
+
+    public Object list(String recordPath) {
+        String path = ojConfig.getBase() + FilePathEnum.RECORD.getPath() + recordPath;
+        if (!path.endsWith("/")) {
+            path += "/";
+        }
+        return travel(path);
+    }
+
+    private List<String> travel(String path) {
+        List<String> res = new ArrayList<>();
+        try {
+            Files.walkFileTree(Path.of(path), new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
+                    File file = path.toFile();
+                    if (!file.isDirectory()) {
+                        // 添加路径， 并替换base
+                        res.add(file.getAbsolutePath().replace(ojConfig.getBase(), ojConfig.getUrlBase()));
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path path, IOException e) throws IOException {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+            });
+        } catch (IOException e) {
+            throw new ErrorException(StatusCodeEnum.SYSTEM_ERROR);
+        }
+        return res;
     }
 }

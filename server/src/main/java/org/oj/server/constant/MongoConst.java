@@ -35,4 +35,11 @@ public class MongoConst {
     public static final String UPDATE_TIME = "updateTime";
     public static final String START_TIME = "startTIme";
     public static final String CREATE_TIME = "createTime";
+    public static final String FACULTY_ID = "facultyId";
+    public static final String IP_ADDRESS = "ipAddress";
+    public static final String NICKNAME = "nickname";
+    public static final String NAME = "name";
+    public static final String NUMBER = "number";
+    public static final String ROLE_ID = "roleIds";
+    public static final String IS_TOP = "isTop";
 }

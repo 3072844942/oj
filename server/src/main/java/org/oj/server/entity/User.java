@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.oj.server.constant.MongoConst;
 import org.oj.server.enums.EntityStateEnum;
 import org.oj.server.enums.LoginTypeEnum;
+import org.oj.server.util.StateEnable;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -26,7 +27,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(MongoConst.USER)
-public class User {
+public class User implements StateEnable {
 
     /**
      * 用户ID

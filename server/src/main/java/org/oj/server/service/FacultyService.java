@@ -1,28 +1,23 @@
 package org.oj.server.service;
 
-import jakarta.annotation.PostConstruct;
 import org.oj.server.constant.MongoConst;
 import org.oj.server.dao.FacultyRepository;
-import org.oj.server.dto.FacultyDTO;
 import org.oj.server.dto.ConditionDTO;
-import org.oj.server.entity.Article;
+import org.oj.server.dto.FacultyDTO;
 import org.oj.server.entity.Faculty;
 import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
 import org.oj.server.util.PermissionUtil;
-import org.oj.server.util.StringUtils;
+import org.oj.server.util.QueryUtils;
 import org.oj.server.vo.FacultyVO;
 import org.oj.server.vo.PageVO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author march
@@ -39,20 +34,9 @@ public class FacultyService {
     }
 
     public FacultyVO insertOne(FacultyDTO facultyDTO) {
-        WarnException checked = FacultyDTO.check(facultyDTO);
-        if (checked != null) {
-            throw checked;
-        }
-
-        // id不为空
-        if (StringUtils.isPresent(facultyDTO.getId())) {
-            // 数据已存在
-            if (facultyRepository.existsById(facultyDTO.getId())) {
-                throw new ErrorException(StatusCodeEnum.DATA_EXIST);
-            }
-            // 不存在则置空
-            facultyDTO.setId("");
-        }
+        FacultyDTO.check(facultyDTO);
+        // 不存在则置空
+        facultyDTO.setId("");
 
         Faculty faculty = Faculty.of(facultyDTO);
         faculty = facultyRepository.insert(faculty);
@@ -61,20 +45,16 @@ public class FacultyService {
     }
 
     public void delete(List<String> ids) {
-        // 删除需要写权限
         if (!PermissionUtil.enableWrite("")) {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
-
         facultyRepository.deleteAllById(ids);
     }
 
     public void deleteOne(String id) {
-        // 删除需要写权限
         if (!PermissionUtil.enableWrite("")) {
             throw new ErrorException(StatusCodeEnum.UNAUTHORIZED);
         }
-
         facultyRepository.deleteById(id);
     }
 
@@ -83,13 +63,7 @@ public class FacultyService {
 
         // 查询条件
         Query query = new Query();
-        String keywords = conditionDTO.getKeywords();
-        if (keywords != null) {
-            query.addCriteria(new Criteria().orOperator(
-                    Criteria.where(MongoConst.CONTENT).regex(keywords),
-                    Criteria.where(MongoConst.TITLE).regex(keywords)
-            ));
-        }
+        QueryUtils.regexKeywords(query, conditionDTO.getKeywords(), MongoConst.TITLE, MongoConst.CONTENT);
 
         long count = mongoTemplate.count(query, Faculty.class);
 
@@ -102,10 +76,7 @@ public class FacultyService {
     }
 
     public FacultyDTO updateOne(FacultyDTO facultyDTO) {
-        WarnException checked = FacultyDTO.check(facultyDTO);
-        if (checked != null) {
-            throw checked;
-        }
+        FacultyDTO.check(facultyDTO);
 
         // 数据已存在
         if (!facultyRepository.existsById(facultyDTO.getId())) {
@@ -113,7 +84,7 @@ public class FacultyService {
         }
 
         Faculty faculty = Faculty.of(facultyDTO);
-        faculty = facultyRepository.insert(faculty);
+        faculty = facultyRepository.save(faculty);
 
         return FacultyDTO.of(faculty);
     }

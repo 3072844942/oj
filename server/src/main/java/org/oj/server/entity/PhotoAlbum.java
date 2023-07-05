@@ -5,7 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.oj.server.constant.MongoConst;
+import org.oj.server.dto.PhotoAlbumDTO;
 import org.oj.server.enums.EntityStateEnum;
+import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.util.SensitiveUtils;
+import org.oj.server.util.StateEnable;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -22,7 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @Builder
 @Document(MongoConst.PHOTO_ALBUM)
-public class PhotoAlbum {
+public class PhotoAlbum implements StateEnable {
 
     /**
      * 主键
@@ -61,4 +65,12 @@ public class PhotoAlbum {
      */
     @LastModifiedDate
     private Long updateTime;
+
+    public static PhotoAlbum of(PhotoAlbumDTO albumDTO) {
+        PhotoAlbum photoAlbum = BeanCopyUtils.copyObject(albumDTO, PhotoAlbum.class);
+        photoAlbum.setState(EntityStateEnum.valueOf(albumDTO.getState()));
+        photoAlbum.setTitle(SensitiveUtils.filter(albumDTO.getTitle()));
+        photoAlbum.setContent(SensitiveUtils.filter(albumDTO.getContent()));
+        return photoAlbum;
+    }
 }

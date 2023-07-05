@@ -6,8 +6,6 @@ import org.oj.server.entity.Tag;
 import org.oj.server.exception.WarnException;
 import org.oj.server.util.BeanCopyUtils;
 import org.oj.server.util.StringUtils;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * 文章标签
@@ -34,10 +32,10 @@ public class TagDTO {
      * 标签
      */
     @Schema(description = "名称")
-    private String name;
+    private String title;
 
     public static void check(TagDTO tagDTO) {
-        if (!StringUtils.isSpecifiedLength(tagDTO.getName(), 0, 20)) {
+        if (!StringUtils.isSpecifiedLength(tagDTO.getTitle(), 0, 20)) {
             throw new WarnException("名称长度超限");
         }
     }

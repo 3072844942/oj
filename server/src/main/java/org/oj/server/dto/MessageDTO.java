@@ -11,7 +11,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * @author bin
  * @date 2021/08/01
  */
-@Getter
+@Data
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class MessageDTO {
     /**
@@ -25,11 +27,6 @@ public class MessageDTO {
     private String userId;
 
     /**
-     * 接受人id
-     */
-    private String toUserId;
-
-    /**
      * 留言内容
      */
     private String content;
@@ -38,4 +35,11 @@ public class MessageDTO {
      * 是否已读
      */
     private Integer state;
+
+    /**
+     * 创建时间
+     */
+    private Long createTime;
+
+    private Long updateTime;
 }
