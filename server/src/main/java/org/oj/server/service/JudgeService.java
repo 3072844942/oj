@@ -1,6 +1,9 @@
 package org.oj.server.service;
 
 import org.oj.server.config.OJConfig;
+import org.oj.server.constant.MongoConst;
+import org.oj.server.dao.RecordRepository;
+import org.oj.server.dto.ConditionDTO;
 import org.oj.server.dto.JudgeDTO;
 import org.oj.server.dto.PoolInfoDTO;
 import org.oj.server.dto.Request;
@@ -15,15 +18,19 @@ import org.oj.server.exception.ErrorException;
 import org.oj.server.exception.WarnException;
 import org.oj.server.util.JudgePool;
 import org.oj.server.util.LanguageUtil;
+import org.oj.server.util.QueryUtils;
 import org.oj.server.util.StringUtils;
+import org.oj.server.vo.PageVO;
 import org.oj.server.vo.PoolInfoVO;
 import org.oj.server.vo.RecordVO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -38,18 +45,25 @@ public class JudgeService {
     private final ContestService contestService;
     private final UploadService uploadService;
     private final MongoTemplate mongoTemplate;
+    private final RecordRepository recordRepository;
     private final OJConfig ojConfig;
 
-    public JudgeService(ProblemService problemService, ContestService contestService, UploadService uploadService, MongoTemplate mongoTemplate, OJConfig ojConfig) {
+    public JudgeService(ProblemService problemService, ContestService contestService, UploadService uploadService, MongoTemplate mongoTemplate, RecordRepository recordRepository, OJConfig ojConfig) {
         this.problemService = problemService;
         this.contestService = contestService;
         this.uploadService = uploadService;
         this.mongoTemplate = mongoTemplate;
+        this.recordRepository = recordRepository;
         this.ojConfig = ojConfig;
     }
 
     @Transactional
     public RecordVO judge(JudgeDTO judgeDTO) {
+        // 未登陆
+        if (Request.user.get() == null) {
+            throw new WarnException(StatusCodeEnum.NOT_LOGIN);
+        }
+
         // 写入本地
         String path = uploadService.upload(judgeDTO.getCode(), judgeDTO.getLanguage());
 
@@ -61,6 +75,11 @@ public class JudgeService {
             // 不是比赛中的题目
             if (!contest.getProblemIds().contains(judgeDTO.getProblemId())) {
                 throw new ErrorException(StatusCodeEnum.DATA_NOT_EXIST);
+            }
+            long currentTime = System.currentTimeMillis() / 1000;
+            // 未开始 || 已结束
+            if (contest.getStartTime() > currentTime || contest.getEndTime() < currentTime) {
+                throw new ErrorException(StatusCodeEnum.NOT_RUNNING);
             }
         }
 
@@ -89,9 +108,11 @@ public class JudgeService {
         if (StringUtils.isPresent(judgeDTO.getContestId())) {
             // 这里没有问题， 到这里时一定会找到contest
             record.setContestId(contest.getId());
+            // 提交缓存
+            contestService.save(record);
         }
 
-        Record insert = mongoTemplate.insert(record);
+        Record insert = recordRepository.insert(record);
 
         return RecordVO.of(insert);
     }
@@ -164,5 +185,26 @@ public class JudgeService {
 
     public PoolInfoVO updatePool(PoolInfoDTO poolInfoDTO) {
         return JudgePool.update(poolInfoDTO);
+    }
+
+    public PageVO<RecordVO> listRecord(ConditionDTO conditionDTO) {
+        Query query = new Query();
+        if (StringUtils.isPresent(conditionDTO.getProblemId())) {
+            query.addCriteria(Criteria.where(MongoConst.PROBLEM_ID).is(conditionDTO.getProblemId()));
+        }
+        if (StringUtils.isPresent(conditionDTO.getContestId())) {
+            query.addCriteria(Criteria.where(MongoConst.CONTEST_ID).is(conditionDTO.getContestId()));
+        }
+
+        long count = mongoTemplate.count(query, Record.class);
+
+        query.with(QueryUtils.defaultSort());
+        QueryUtils.skip(query, conditionDTO);
+        List<Record> records = mongoTemplate.find(query, Record.class);
+
+        return new PageVO<>(
+                records.stream().map(RecordVO::of).toList(),
+                count
+        );
     }
 }

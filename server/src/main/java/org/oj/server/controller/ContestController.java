@@ -4,13 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.oj.server.annotation.OptLog;
 import org.oj.server.constant.OptTypeConst;
-import org.oj.server.dto.ContestDTO;
 import org.oj.server.dto.ConditionDTO;
+import org.oj.server.dto.ContestDTO;
 import org.oj.server.service.ContestService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -31,6 +29,12 @@ public class ContestController extends BaseController {
     @GetMapping("{contestId}")
     public Object findOne(@PathVariable String contestId) {
         return ok(contestService.findOne(contestId));
+    }
+
+    @Operation(summary = "根据id查找比赛题目")
+    @GetMapping("{contestId}/{problemId}")
+    public Object findOneProblem(@PathVariable String contestId, @PathVariable String problemId) {
+        return ok(contestService.findOneProblem(contestId, problemId));
     }
 
     @Operation(summary = "根据id查找比赛")
@@ -57,6 +61,7 @@ public class ContestController extends BaseController {
     public Object updateOne(@RequestBody ContestDTO contestDTO) {
         return ok(contestService.updateOne(contestDTO));
     }
+
     @Operation(summary = "报名比赛")
     @PatchMapping("sign/{contestId}")
     public Object signUp(@PathVariable String contestId) {
@@ -87,7 +92,7 @@ public class ContestController extends BaseController {
     @OptLog(optType = OptTypeConst.EXPORT)
     @Operation(summary = "导出成绩")
     @GetMapping("export/{contestId}")
-    public Object export(@PathVariable String contestId){
+    public Object export(@PathVariable String contestId) {
         return ok(contestService.export(contestId));
     }
 }

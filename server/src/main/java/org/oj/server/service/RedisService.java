@@ -1,7 +1,6 @@
 package org.oj.server.service;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
@@ -130,6 +129,10 @@ public class RedisService {
         return redisTemplate.opsForZSet().reverseRangeWithScores(key, start, end)
                 .stream()
                 .collect(Collectors.toMap(ZSetOperations.TypedTuple::getValue, ZSetOperations.TypedTuple::getScore));
+    }
+
+    public Long zSize(String key) {
+        return redisTemplate.opsForZSet().size(key);
     }
 
     public Double zScore(String key, Object value) {
@@ -269,4 +272,7 @@ public class RedisService {
                 .hash(key, place);
     }
 
+    public void zRem(String key, Object value) {
+        redisTemplate.opsForZSet().remove(key, value);
+    }
 }

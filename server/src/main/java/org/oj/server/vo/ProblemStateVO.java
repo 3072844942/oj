@@ -34,7 +34,7 @@ public class ProblemStateVO {
      * 单题罚时
      */
     @Schema(description = "罚时")
-    private Integer penalty;
+    private Long penalty;
 
     /**
      * 是否通过

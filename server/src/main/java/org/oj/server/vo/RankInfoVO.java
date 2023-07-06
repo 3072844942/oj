@@ -15,7 +15,6 @@ import org.oj.server.util.BeanCopyUtils;
 import org.oj.server.util.ExcelExporter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -44,7 +43,7 @@ public class RankInfoVO implements ExcelExporter {
      * 罚时
      */
     @Schema(description = "总罚时")
-    private String penalty;
+    private Long penalty;
 
     /**
      * 题目状态
@@ -54,7 +53,20 @@ public class RankInfoVO implements ExcelExporter {
     private List<ProblemStateVO> problemStates;
 
     public static RankInfoVO of(RankInfo rankInfo) {
-        return BeanCopyUtils.copyObject(rankInfo, RankInfoVO.class);
+        RankInfoVO rankInfoVO = BeanCopyUtils.copyObject(rankInfo, RankInfoVO.class);
+        rankInfoVO.setProblemStates(rankInfo.getProblemStateMap().values().stream().map(ProblemStateVO::of).toList());
+        return rankInfoVO;
+    }
+
+    public static List<String> getHeader(List<String> titles) {
+        List<String> list = new ArrayList<>(5 + titles.size());
+        list.add("昵称");
+        list.add("名字");
+        list.add("学号");
+        list.add("过题数");
+        list.add("罚时");
+        list.addAll(titles);
+        return list;
     }
 
     @Override
@@ -64,7 +76,7 @@ public class RankInfoVO implements ExcelExporter {
         row.createCell(2).setCellValue(user.getNumber());
         row.createCell(3).setCellValue(count);
         row.createCell(4).setCellValue(penalty);
-        for (int i = 0; i < problemStates.size(); i ++ ) {
+        for (int i = 0; i < problemStates.size(); i++) {
             ProblemStateVO state = problemStates.get(i);
 
             SXSSFCell cell = row.createCell(i + 5);
@@ -77,16 +89,5 @@ public class RankInfoVO implements ExcelExporter {
             cell.setCellStyle(cellStyle);
             cell.setCellValue(state.getNumber());
         }
-    }
-
-    public static List<String> getHeader(List<String> titles) {
-        List<String> list = new ArrayList<>(5 + titles.size());
-        list.add("昵称");
-        list.add("名字");
-        list.add("学号");
-        list.add("过题数");
-        list.add("罚时");
-        list.addAll(titles);
-        return list;
     }
 }

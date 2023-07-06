@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.oj.server.util.BeanCopyUtils;
+import org.oj.server.vo.ProblemStateVO;
 
 /**
  * @author march
@@ -27,7 +29,7 @@ public class ProblemState {
     /**
      * 单题罚时
      */
-    private Integer penalty;
+    private Long penalty;
 
     /**
      * 是否通过
@@ -38,4 +40,8 @@ public class ProblemState {
      * 是否一血
      */
     private Boolean firstBlood;
+
+    public static ProblemState of(ProblemStateVO problemStateVO) {
+        return BeanCopyUtils.copyObject(problemStateVO, ProblemState.class);
+    }
 }

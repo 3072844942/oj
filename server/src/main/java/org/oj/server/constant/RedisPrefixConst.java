@@ -8,4 +8,9 @@ package org.oj.server.constant;
  */
 public class RedisPrefixConst {
     public static final String TOKEN = "token:";
+    public static final String EXPORT_CONTEXT = "contest:export:";
+    public static final String CONTEXT = "contest:info:";
+    public static final String CONTEXT_PROBLEM = "contest:problem";
+    public static final String CONTEXT_RANK = "contest:rank";
+    public static final String CONTEXT_RANK_MAP = "contest:rankMap:";
 }

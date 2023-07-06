@@ -42,4 +42,6 @@ public class MongoConst {
     public static final String NUMBER = "number";
     public static final String ROLE_ID = "roleIds";
     public static final String IS_TOP = "isTop";
+    public static final String PROBLEM_ID = "problemId";
+    public static final String CONTEST_ID = "contestId";
 }

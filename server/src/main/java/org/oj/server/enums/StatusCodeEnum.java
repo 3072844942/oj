@@ -27,7 +27,10 @@ public enum StatusCodeEnum {
     WRITE_ERROR(12, "写入文件错误"),
     JUDGE_ERROR(13, "评测时异常"),
     LANGUAGE_NOT_SUPPORT(14, "不支持该语言"),
-    COMPILE_ERROR(15, "编辑错误");
+    COMPILE_ERROR(15, "编辑错误"),
+    RUNNING(16, "正在运行"),
+    NOT_RUNNING(17, "不在运行时间"),
+    NOT_LOGIN(18, "未登录");
 
     /**
      * 状态码

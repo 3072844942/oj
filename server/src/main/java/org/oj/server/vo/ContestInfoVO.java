@@ -56,7 +56,7 @@ public class ContestInfoVO {
      * 比赛题目集
      */
     @Schema(description = "题目集")
-    private List<ProblemVO> problems;
+    private List<ProblemProfileVO> problems;
 
     /**
      * 状态
