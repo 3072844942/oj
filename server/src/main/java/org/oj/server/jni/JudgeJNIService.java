@@ -1,6 +1,7 @@
 package org.oj.server.jni;
 
 import org.oj.server.entity.Record;
+import org.oj.server.entity.Result;
 import org.oj.server.entity.Task;
 import org.oj.server.util.LibLoader;
 
@@ -24,5 +25,5 @@ public class JudgeJNIService {
 
     public static native String hello();
 
-    public static native Record judge(Task o);
+    public static native Result judge(Task o);
 }

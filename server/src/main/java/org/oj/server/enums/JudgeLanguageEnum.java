@@ -16,7 +16,7 @@ public enum JudgeLanguageEnum {
     JAVA(2, "JAVA"),
     PYTHON3(3, "PYTHON3");
 
-    private Integer code;
+    private final Integer code;
 
-    private String desc;
+    private final String desc;
 }

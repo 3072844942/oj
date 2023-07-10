@@ -1,8 +1,15 @@
 //
 // Created by snak on 23-7-3.
 //
+//  注意：请在linux系统下调试运行
+//  若你在macos系统下运行(虽然可以跑)，会出现你不期望的情况，
+//  例如：某些量的单位会不同(eg.costResource.ru_maxrss)
+//       或者某些功能无法实现（eg.内存超限检测）
+#include <string>
 #include "JudgeCore.h"
-#include "jni_lib.hpp"
+#include "common/common.h"
+#include "judge/judge.h"
+#include "utils/jni_lib.h"
 
 /*
  * Class:     org_oj_server_jni_JudgeJNIService
@@ -11,7 +18,8 @@
  */
 JNIEXPORT jstring JNICALL Java_org_oj_server_jni_JudgeJNIService_hello
         (JNIEnv * env, jclass type) {
-    return string_to_jstring(env, "Hello");
+    std::string hello = "Hello from C++";
+    return string_to_jstring(env, hello);
 }
 
 /*
@@ -21,5 +29,15 @@ JNIEXPORT jstring JNICALL Java_org_oj_server_jni_JudgeJNIService_hello
  */
 JNIEXPORT jobject JNICALL Java_org_oj_server_jni_JudgeJNIService_judge
         (JNIEnv * env, jclass type, jobject o) {
-    return NULL;
+    struct execConfig execConfig;
+    struct judgeResult judgeResult;
+    initExecConfigAndJudgeResult(&execConfig, &judgeResult);
+    if (getAndSetOptions(env, type, o, &execConfig)) {
+        if (validateForExecConfig(&execConfig)) {
+            runJudge(&execConfig, &judgeResult);
+        } else {
+            judgeResult.condition = VALIDATE_ERROR;
+        }
+    }
+    return generateResult(env, &execConfig, &judgeResult);
 }

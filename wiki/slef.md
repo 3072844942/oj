@@ -57,3 +57,10 @@
 [https://blog.csdn.net/lj402159806/article/details/86169807](https://blog.csdn.net/lj402159806/article/details/86169807)
 
 **注意打包时切换地址**
+
+
+
+```shell
+git log --author="3072844942" --pretty=tformat: --numstat | gawk '{ add += $1; subs += $2; loc += $1 - $2 } END { printf "added lines: %s removed lines %s total lines: %s\n", add, subs, loc}' -
+```
+

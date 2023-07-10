@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.oj.server.enums.JudgeStateEnum;
-import org.oj.server.enums.StatusCodeEnum;
 import org.oj.server.exception.ErrorException;
 import org.oj.server.jni.JudgeJNIService;
 import org.oj.server.util.FileUtils;
@@ -48,15 +47,14 @@ public class Task implements Callable<Record> {
 
     @Override
     public Record call() {
-//        return judge();
-        return JudgeJNIService.judge(this);
+        return judge(true);
     }
 
     /**
      * 不能对程序的运行进行限制
      */
     @Deprecated
-    public Record judge() {
+    public Record judge(boolean enableJNI) {
         Record record = Record.builder()
                 .build();
         if (LanguageUtil.isCPP(language)) { // c++,
@@ -76,6 +74,11 @@ public class Task implements Callable<Record> {
             }
         }
 
+        Result judge;
+        if (enableJNI) {
+            judge = JudgeJNIService.judge(this);
+        }
+
         String cmd = LanguageUtil.cmdPrefix(language) + code;
         for (int i = 1; ; i++) {
             String inPath = problem.getAddress() + i + ".in";
@@ -85,42 +88,46 @@ public class Task implements Callable<Record> {
             }
 
             try {
-                String input = FileUtils.read(inPath);
-
-                // 使用 Runtime.exec() 执行 ulimit 命令设置资源限制
-                Runtime.getRuntime().exec("ulimit -m " + problem.getMemoryRequire()); // 设置最大内存限制
-                Runtime.getRuntime().exec("ulimit -t " + problem.getTimeRequire() / 1000.0d);      // 设置 CPU 时间限制
-
-                // 创建进程构建器
-                ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-                // 启动进程
-                Process process = processBuilder.start();
-                // 写入输入
-                OutputStream outputStream = process.getOutputStream();
-                outputStream.write(input.getBytes());
-                outputStream.flush();
-                outputStream.close();
-
-                boolean finished = process.waitFor(problem.getTimeRequire(), TimeUnit.MILLISECONDS);
-                record.setTimeCost(ManagementFactory.getRuntimeMXBean().getUptime());
-                record.setMemoryCost(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() / (1024 * 1024));
-                if (!finished) {
-                    // 超时
-                    record.setResult(JudgeStateEnum.TIME_LIMIT_EXCEEDED);
-                    return record;
-                } else if (record.getMemoryCost() >= problem.getMemoryRequire()) {
-                    // 内存超限
-                    record.setResult(JudgeStateEnum.MEMORY_LIMIT_EXCEED);
-                    return record;
-                }
-
-                // 程序输出
                 StringBuilder output = new StringBuilder();
-                InputStream inputStream = process.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    output.append(line);
+                if (enableJNI) {
+                    output = new StringBuilder(FileUtils.read(out + i + ".out"));
+                } else {
+                    String input = FileUtils.read(inPath);
+
+                    // 使用 Runtime.exec() 执行 ulimit 命令设置资源限制
+                    Runtime.getRuntime().exec("ulimit -m " + problem.getMemoryRequire()); // 设置最大内存限制
+                    Runtime.getRuntime().exec("ulimit -t " + problem.getTimeRequire() / 1000.0d);      // 设置 CPU 时间限制
+
+                    // 创建进程构建器
+                    ProcessBuilder processBuilder = new ProcessBuilder(cmd);
+                    // 启动进程
+                    Process process = processBuilder.start();
+                    // 写入输入
+                    OutputStream outputStream = process.getOutputStream();
+                    outputStream.write(input.getBytes());
+                    outputStream.flush();
+                    outputStream.close();
+
+                    boolean finished = process.waitFor(problem.getTimeRequire(), TimeUnit.MILLISECONDS);
+                    record.setTimeCost(ManagementFactory.getRuntimeMXBean().getUptime());
+                    record.setMemoryCost(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() / (1024 * 1024));
+                    if (!finished) {
+                        // 超时
+                        record.setResult(JudgeStateEnum.TIME_LIMIT_EXCEEDED);
+                        return record;
+                    } else if (record.getMemoryCost() >= problem.getMemoryRequire()) {
+                        // 内存超限
+                        record.setResult(JudgeStateEnum.MEMORY_LIMIT_EXCEED);
+                        return record;
+                    }
+
+                    // 程序输出
+                    InputStream inputStream = process.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line);
+                    }
                 }
 
                 // 特判
